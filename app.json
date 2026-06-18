@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Provision",
+    "slug": "provision",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "provision",
+    "splash": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#085041",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "bundleIdentifier": "com.provision.snap",
+      "infoPlist": {
+        "NSCameraUsageDescription": "To scan SNAP notices and letters",
+        "NSPhotoLibraryUsageDescription": "To upload photos of SNAP notices"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F6E56"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      ["expo-camera", { "cameraPermission": "Allow Provision to scan notices" }]
+    ]
+  }
+}
