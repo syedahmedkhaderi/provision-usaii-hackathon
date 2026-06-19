@@ -1,6 +1,6 @@
 // app/onboarding/welcome.tsx
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,9 +11,29 @@ import {
 } from '../../constants/typography';
 import { PAGE_HORIZONTAL, SECTION, LG, XL, MD, SM } from '../../constants/spacing';
 import { Button } from '../../components/ui/Button';
+import { useUser } from '../../context/UserContext';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { setProfile } = useUser();
+
+  const handleDemoMode = () => {
+    const demoEnroll = new Date();
+    demoEnroll.setMonth(demoEnroll.getMonth() - 3);
+    setProfile({
+      state: 'CA',
+      enrollmentDate: demoEnroll.toISOString().split('T')[0],
+      lastRecertDate: null,
+      householdSize: 3,
+      monthlyIncome: 900,
+      reportingType: 'SAR',
+      recentChange: 'Started a part-time DoorDash job',
+      issueType: 'none',
+      onboardingComplete: true,
+      notificationsEnabled: false,
+    });
+    router.replace('/(tabs)');
+  };
 
   const features = [
     { icon: 'calendar-outline' as const, text: 'Your renewal roadmap' },
@@ -53,6 +73,11 @@ export default function WelcomeScreen() {
           <View style={{ flex: 1 }} />
 
           <Button label="Get started" onPress={() => router.push('/onboarding/state')} />
+
+          <TouchableOpacity onPress={handleDemoMode} style={styles.demoLink}>
+            <Ionicons name="play-circle-outline" size={14} color={TEXT_MUTED} />
+            <Text style={styles.demoText}>Try with demo profile</Text>
+          </TouchableOpacity>
 
           <Text style={styles.fineprint}>
             Stays on your device. Not legal advice.
@@ -136,6 +161,18 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
     color: TEXT_SECONDARY,
+  },
+  demoLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    marginTop: MD,
+  },
+  demoText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: TEXT_MUTED,
   },
   fineprint: {
     fontFamily: FONT_FAMILY,

@@ -44,7 +44,7 @@ export default function ReportingScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        <ProgressDots total={6} current={4} />
+        <ProgressDots total={7} current={5} />
 
         <Text style={styles.question}>Do you know your reporting type?</Text>
         <Text style={styles.subText}>

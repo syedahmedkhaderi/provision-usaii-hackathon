@@ -57,7 +57,7 @@ export default function ChangesScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <ProgressDots total={6} current={5} />
+        <ProgressDots total={7} current={6} />
 
         <Text style={styles.question}>Has anything changed recently?</Text>
         <Text style={styles.subText}>

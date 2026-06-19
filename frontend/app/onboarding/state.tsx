@@ -34,7 +34,7 @@ export default function StateScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        <ProgressDots total={6} current={1} />
+        <ProgressDots total={7} current={1} />
 
         <Text style={styles.question}>Which state are you in?</Text>
         <Text style={styles.subText}>Provision supports California and Texas for this demo.</Text>

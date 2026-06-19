@@ -43,7 +43,7 @@ export default function CompleteScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        <ProgressDots total={6} current={6} />
+        <ProgressDots total={7} current={7} />
 
         <View style={styles.iconWrap}>
           <Ionicons name="checkmark" size={44} color={BLACK} />
@@ -69,6 +69,15 @@ export default function CompleteScreen() {
             <SectionLabel>Reporting</SectionLabel>
             <Text style={styles.summaryValue}>{reportingLabel}</Text>
           </View>
+          {(profile.monthlyIncome ?? 0) > 0 && (
+            <>
+              <Divider />
+              <View style={styles.summaryRow}>
+                <SectionLabel>Monthly income</SectionLabel>
+                <Text style={styles.summaryValue}>${profile.monthlyIncome?.toLocaleString()}/mo</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Notification opt-in */}

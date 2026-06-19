@@ -27,7 +27,7 @@ export async function analyzeChange(
       change_text: input,
       household_context: {
         household_size: profile.householdSize,
-        current_monthly_income: 0, // not collected during onboarding; omitted from Gemini prompt
+        current_monthly_income: profile.monthlyIncome ?? 0,
       },
     });
 

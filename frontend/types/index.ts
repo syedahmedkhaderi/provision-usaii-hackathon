@@ -19,11 +19,18 @@ export interface UserProfile {
   enrollmentDate: string; // ISO date string 'YYYY-MM-DD'
   lastRecertDate: string | null;
   householdSize: number;
+  monthlyIncome?: number; // gross monthly before taxes; optional (not all users enter)
   reportingType: ReportingType;
   recentChange: string;
   issueType: IssueType;
   onboardingComplete: boolean;
   notificationsEnabled: boolean;
+}
+
+export interface EligibilityEstimate {
+  likelyEligible: boolean;
+  benefitRange: [number, number];
+  confidence: 'high' | 'medium' | 'low';
 }
 
 export interface Deadline {

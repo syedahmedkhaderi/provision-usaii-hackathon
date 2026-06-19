@@ -49,7 +49,7 @@ export default function EnrollmentScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        <ProgressDots total={6} current={2} />
+        <ProgressDots total={7} current={2} />
 
         <Text style={styles.question}>When did you last enroll or recertify?</Text>
         <Text style={styles.subText}>Check your approval letter. An estimate is fine.</Text>

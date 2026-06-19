@@ -36,13 +36,13 @@ export default function HouseholdScreen() {
   };
   const handleContinue = () => {
     updateProfile({ householdSize: count });
-    router.push('/onboarding/reporting');
+    router.push('/onboarding/income');
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        <ProgressDots total={6} current={3} />
+        <ProgressDots total={7} current={3} />
 
         <Text style={styles.question}>How many people are in your household?</Text>
         <Text style={styles.subText}>Include everyone who buys and prepares food together.</Text>
