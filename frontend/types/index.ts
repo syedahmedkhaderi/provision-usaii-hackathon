@@ -42,6 +42,11 @@ export interface RiskProfile {
   reasons: string[];
 }
 
+export interface Citation {
+  label: string;
+  source: string;
+}
+
 export interface ReportResult {
   classification: string;
   needs_to_report: boolean;
@@ -50,6 +55,11 @@ export interface ReportResult {
   what_to_do: string;
   contact: string;
   confidence: 'high' | 'medium' | 'low';
+  // enriched by backend
+  deadline_days?: number | null;
+  citations?: Citation[];
+  ai_explanation_unavailable?: boolean;
+  disclaimer?: string;
 }
 
 export interface RecoveryOption {
@@ -64,6 +74,10 @@ export interface ScanResult {
   deadline_text: string | null;
   options: RecoveryOption[];
   contact: string;
+  // enriched by backend
+  citations?: Citation[];
+  ai_explanation_unavailable?: boolean;
+  disclaimer?: string;
 }
 
 export interface RecoveryTimeline {

@@ -130,6 +130,16 @@ export default function ReportScreen() {
         {/* Result phase */}
         {result && (
           <View style={{ gap: MD }}>
+            {/* Degradation banner — shown when AI is unavailable but rules-based result is still useful */}
+            {result.ai_explanation_unavailable && (
+              <View style={styles.degradationBanner}>
+                <Ionicons name="information-circle-outline" size={14} color={NEAR_BLACK} />
+                <Text style={styles.degradationText}>
+                  AI explanation briefly unavailable — showing rule-based answer.
+                </Text>
+              </View>
+            )}
+
             {result.confidence === 'low' ? (
               <>
                 <AccentCard weight="normal" background="tinted" style={{ padding: CARD_PADDING }}>
@@ -143,7 +153,9 @@ export default function ReportScreen() {
               <>
                 <View style={styles.classificationChip}>
                   <Ionicons name="pricetag-outline" size={11} color={NEAR_BLACK} />
-                  <Text style={styles.classificationText}>{result.classification}</Text>
+                  <Text style={styles.classificationText}>
+                    {result.classification.replace(/_/g, ' ')}
+                  </Text>
                 </View>
 
                 <AccentCard
@@ -153,14 +165,34 @@ export default function ReportScreen() {
                 >
                   <Text style={styles.verdictTitle}>{result.verdict}</Text>
                   <Text style={styles.verdictBody}>{result.reasoning}</Text>
+                  {result.deadline_days != null && (
+                    <View style={styles.deadlineRow}>
+                      <Ionicons name="time-outline" size={12} color={NEAR_BLACK} />
+                      <Text style={styles.deadlineText}>
+                        Report within {result.deadline_days} days
+                      </Text>
+                    </View>
+                  )}
                 </AccentCard>
+
+                {/* Citations */}
+                {result.citations && result.citations.length > 0 && (
+                  <View style={styles.citationsRow}>
+                    {result.citations.map((c, i) => (
+                      <View key={i} style={styles.citationChip}>
+                        <Ionicons name="bookmark-outline" size={10} color={TEXT_SECONDARY} />
+                        <Text style={styles.citationText}>{c.label}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
 
                 <View style={styles.actionCard}>
                   <SectionLabel style={{ marginBottom: SM }}>What to do next</SectionLabel>
                   <Text style={styles.actionText}>{result.what_to_do}</Text>
                   <ContactBlock label={rules.caseworkerName} phone={rules.caseworkerPhone} />
                   <Text style={styles.disclaimer}>
-                    Guidance only. Not legal advice. Verify with your caseworker.
+                    {result.disclaimer ?? 'Guidance only. Not legal advice. Verify with your caseworker.'}
                   </Text>
                 </View>
               </>
@@ -324,6 +356,55 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     lineHeight: 16,
     marginTop: SM,
+  },
+  degradationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SM,
+    backgroundColor: CARD_BG,
+    borderRadius: RADIUS_MD,
+    padding: MD,
+    borderWidth: 0.5,
+    borderColor: BORDER,
+  },
+  degradationText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: BODY_SM,
+    color: TEXT_SECONDARY,
+    flex: 1,
+  },
+  deadlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: SM,
+  },
+  deadlineText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: NEAR_BLACK,
+    fontWeight: MEDIUM as '500',
+  },
+  citationsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SM,
+  },
+  citationChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: CARD_BG,
+    borderRadius: RADIUS_PILL,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 0.5,
+    borderColor: BORDER,
+  },
+  citationText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: TEXT_SECONDARY,
   },
   startOverLink: {
     alignItems: 'center',

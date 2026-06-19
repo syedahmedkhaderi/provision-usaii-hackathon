@@ -1,145 +1,137 @@
-// services/llmService.ts
-// OpenAI API calls — Spec Part 12
-// All calls return null on error; screens handle gracefully.
+/**
+ * llmService.ts  –  AI feature calls, routed through the Provision backend
+ *
+ * All functions return null on any error; screens handle gracefully.
+ * Set EXPO_PUBLIC_API_BASE_URL in frontend/.env (your machine's LAN IP:8000).
+ */
 
 import { UserProfile, ReportResult, ScanResult, RecoveryTimeline } from '../types';
 import { SNAP_RULES } from '../constants/snapRules';
+import { api, isBackendConfigured } from './apiClient';
 
-const BASE_URL = 'https://api.openai.com/v1/chat/completions';
-const MODEL = 'gpt-4o-mini';
-const API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
-
-async function callLLM(
-  systemPrompt: string,
-  userContent: string | Array<Record<string, unknown>>,
-  maxTokens: number
-): Promise<string | null> {
-  if (!API_KEY) {
-    console.warn('[llmService] No API key set — EXPO_PUBLIC_OPENAI_API_KEY missing');
-    return null;
-  }
-
-  try {
-    const body: Record<string, unknown> = {
-      model: MODEL,
-      max_tokens: maxTokens,
-      temperature: 0.1,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userContent },
-      ],
-    };
-
-    const res = await fetch(BASE_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${API_KEY}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      console.error('[llmService] API error', res.status, await res.text());
-      return null;
-    }
-
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content;
-    return text ?? null;
-  } catch (e) {
-    console.error('[llmService] Network error', e);
-    return null;
-  }
-}
-
-function safeParse<T>(raw: string | null): T | null {
-  if (!raw) return null;
-  try {
-    // Strip any markdown fences if present
-    const cleaned = raw.replace(/```json\n?/g, '').replace(/```/g, '').trim();
-    return JSON.parse(cleaned) as T;
-  } catch {
-    return null;
-  }
-}
+// ── analyzeChange ──────────────────────────────────────────────────────────────
+// Powers the Report screen ("Do I need to report this change?")
 
 export async function analyzeChange(
   input: string,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<ReportResult | null> {
-  const rules = SNAP_RULES[profile.state];
-  const systemPrompt = `You are Provision, a SNAP benefits navigator AI. The user is in ${profile.state} (${rules.stateName}) with ${profile.reportingType} reporting. Their household size is ${profile.householdSize}. Analyze the change they describe and return ONLY valid JSON with this exact schema — no markdown, no extra text:
-{
-  "classification": string,
-  "needs_to_report": boolean,
-  "verdict": string,
-  "reasoning": string,
-  "what_to_do": string,
-  "contact": string,
-  "confidence": "high" | "medium" | "low"
-}
-Set confidence to "low" for complex, ambiguous, or high-stakes cases.
-Never say the user definitely qualifies or does not qualify.
-Always recommend verifying with a caseworker.
-Reasoning should cite state rules. Verdict is one sentence. What_to_do is a specific next action.
-Contact should be the caseworker phone: ${rules.caseworkerPhone}.`;
+  if (!isBackendConfigured()) {
+    console.warn('[llmService] EXPO_PUBLIC_API_BASE_URL not set — backend not configured');
+    return null;
+  }
 
-  const raw = await callLLM(systemPrompt, input, 500);
-  return safeParse<ReportResult>(raw);
+  try {
+    const res = await api.interpretChange({
+      state: profile.state,
+      change_text: input,
+      household_context: {
+        household_size: profile.householdSize,
+        current_monthly_income: 0,
+      },
+    });
+
+    const rules = SNAP_RULES[profile.state];
+    const deadlineSuffix = res.deadline_days ? ` within ${res.deadline_days} days` : '';
+
+    return {
+      classification: res.category,
+      needs_to_report: res.must_report,
+      verdict: res.must_report
+        ? `You likely need to report this${deadlineSuffix}.`
+        : 'You likely do not need to report this right now.',
+      reasoning: res.reasoning,
+      what_to_do: res.deadline_days
+        ? `Contact your caseworker${deadlineSuffix} at ${res.caseworker_phone}.`
+        : `Confirm with your caseworker at ${res.caseworker_phone}.`,
+      contact: res.caseworker_phone || rules.caseworkerPhone,
+      confidence: res.confidence ?? 'medium',
+      deadline_days: res.deadline_days,
+      citations: res.citations,
+      ai_explanation_unavailable: res.ai_explanation_unavailable,
+      disclaimer: res.disclaimer,
+    };
+  } catch (err) {
+    console.error('[llmService] analyzeChange failed:', err);
+    return null;
+  }
 }
+
+// ── scanDocument ───────────────────────────────────────────────────────────────
+// Powers the Scan screen ("What does this notice mean?")
+// Sends the base64 image to the backend; the backend handles OCR + interpret.
 
 export async function scanDocument(
   imageBase64: string,
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<ScanResult | null> {
-  const rules = SNAP_RULES[profile.state];
-  const systemPrompt = `You are Provision. The user photographed a SNAP-related notice. They are in ${profile.state} with ${profile.reportingType} reporting. Return ONLY valid JSON:
-{
-  "document_type": string,
-  "plain_explanation": string,
-  "deadline_text": string | null,
-  "options": [{ "action": string, "detail": string, "urgency": "urgent" | "medium" | "low" }],
-  "contact": string
-}
-Plain explanation: 2-3 sentences in simple language.
-Never provide legal advice. Always recommend contacting caseworker.
-Contact should be: ${rules.caseworkerPhone}.`;
+  if (!isBackendConfigured()) {
+    console.warn('[llmService] EXPO_PUBLIC_API_BASE_URL not set — backend not configured');
+    return null;
+  }
 
-  const userContent = [
-    {
-      type: 'text',
-      text: 'Please analyze this SNAP notice image and explain what it means.',
-    },
-    {
-      type: 'image_url',
-      image_url: { url: `data:image/jpeg;base64,${imageBase64}` },
-    },
-  ];
+  try {
+    const res = await api.interpretNotice({
+      state: profile.state,
+      image_base64: imageBase64,
+    });
 
-  const raw = await callLLM(systemPrompt, userContent as unknown as string, 600);
-  return safeParse<ScanResult>(raw);
+    const rules = SNAP_RULES[profile.state];
+
+    return {
+      document_type: res.notice_type.replace(/_/g, ' '),
+      plain_explanation: res.what_it_means,
+      deadline_text: res.deadline_days ? `${res.deadline_days} days` : null,
+      options: res.options.map((opt) => ({
+        action: opt.label,
+        detail: opt.detail,
+        urgency: res.urgency === 'urgent' ? ('urgent' as const) : ('medium' as const),
+      })),
+      contact: rules.caseworkerPhone,
+      citations: res.citations,
+      ai_explanation_unavailable: res.ai_explanation_unavailable,
+      disclaimer: res.disclaimer,
+    };
+  } catch (err) {
+    console.error('[llmService] scanDocument failed:', err);
+    return null;
+  }
 }
+
+// ── generateRecoveryTimeline ───────────────────────────────────────────────────
+// Powers the Recovery modal
 
 export async function generateRecoveryTimeline(
-  profile: UserProfile
+  profile: UserProfile,
 ): Promise<RecoveryTimeline | null> {
-  const rules = SNAP_RULES[profile.state];
-  const systemPrompt = `You are Provision. The user's issue is: ${profile.issueType}. They are in ${profile.state} (${rules.stateName}). Return ONLY valid JSON:
-{
-  "current_situation": string,
-  "steps": [{ "title": string, "description": string, "days_estimate": string, "is_critical": boolean }],
-  "fair_hearing_days": number,
-  "hearing_request_letter": string,
-  "reapply_note": string,
-  "contact": string
-}
-hearing_request_letter: a template letter requesting a fair hearing, with [BRACKET] placeholders for user details.
-Steps: 3-5 steps max. Describe typical process, not guarantees.
-Frame everything as "what typically happens" not "what will happen".
-Contact should be: ${rules.caseworkerPhone}.
-Fair hearing days for this state: ${rules.fairHearingDays}.`;
+  if (!isBackendConfigured()) {
+    console.warn('[llmService] EXPO_PUBLIC_API_BASE_URL not set — backend not configured');
+    return null;
+  }
 
-  const raw = await callLLM(systemPrompt, profile.recentChange || `Issue: ${profile.issueType}`, 800);
-  return safeParse<RecoveryTimeline>(raw);
+  try {
+    const res = await api.recoveryPlan({
+      state: profile.state,
+      situation: profile.issueType,
+    });
+
+    const rules = SNAP_RULES[profile.state];
+
+    return {
+      current_situation: profile.issueType.replace(/_/g, ' '),
+      steps: res.steps.map((s, i) => ({
+        title: s.title,
+        description: s.detail,
+        days_estimate: i === 0 ? 'Immediately' : 'Within a few days',
+        is_critical: i === 0,
+      })),
+      fair_hearing_days: res.fair_hearing_deadline_days,
+      hearing_request_letter: res.letter_template,
+      reapply_note: res.reapply_note ?? '',
+      contact: rules.caseworkerPhone,
+    };
+  } catch (err) {
+    console.error('[llmService] generateRecoveryTimeline failed:', err);
+    return null;
+  }
 }
