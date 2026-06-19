@@ -1,18 +1,24 @@
-// app/(tabs)/report.tsx — Report a Change
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import {
-  BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
+  View, Text, StyleSheet, TextInput, ScrollView,
+  TouchableOpacity, KeyboardAvoidingView, Platform,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY,
+  TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
-  BODY, BODY_SM, BODY_LG, CAPTION, LABEL_SM, HEADING_LG,
+  BODY, BODY_SM, BODY_LG, LABEL_SM, HEADING_LG, CAPTION,
   MEDIUM, SEMIBOLD, FONT_FAMILY,
 } from '../../constants/typography';
-import { RADIUS_MD, RADIUS_LG, RADIUS_PILL, PAGE_HORIZONTAL, MD, LG, SECTION, SM, CARD_PADDING } from '../../constants/spacing';
+import {
+  RADIUS_MD, RADIUS_LG, RADIUS_PILL, PAGE_HORIZONTAL,
+  MD, LG, SECTION, SM, CARD_PADDING,
+} from '../../constants/spacing';
 import { useUser } from '../../context/UserContext';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
 import { AccentCard } from '../../components/ui/AccentCard';
 import { ContactBlock } from '../../components/ui/ContactBlock';
 import { SectionLabel } from '../../components/ui/SectionLabel';
@@ -32,6 +38,7 @@ const EXAMPLES = [
 
 export default function ReportScreen() {
   const { profile } = useUser();
+  const insets = useSafeAreaInsets();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ReportResult | null>(null);
@@ -65,25 +72,31 @@ export default function ReportScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: WHITE }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
+      {/* Page header */}
+      <View style={[styles.header, { paddingTop: insets.top + LG }]}>
+        <Text style={styles.title}>Report a change</Text>
+        <Text style={styles.subtitle}>Describe what changed in plain language.</Text>
+      </View>
+
+      {/* Scrollable content */}
       <ScrollView
-        style={styles.container}
+        style={styles.scroll}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.question}>Do I need to report this?</Text>
-          <Text style={styles.subText}>Describe what changed in plain language.</Text>
-        </View>
-
         {/* Input phase */}
         {!result && (
           <>
             <TextInput
-              style={[styles.textarea, { borderColor: input.length > 0 ? BLACK : BORDER }]}
+              style={[
+                styles.textarea,
+                { borderColor: input.length > 0 ? BLACK : BORDER },
+              ]}
               value={input}
               onChangeText={setInput}
               multiline
@@ -96,13 +109,20 @@ export default function ReportScreen() {
 
             {error && <Text style={styles.errorText}>{error}</Text>}
 
-            <View style={{ marginTop: SECTION, marginBottom: SECTION }}>
-              <Button
-                label={loading ? 'Analyzing...' : 'Check this change'}
-                onPress={handleSubmit}
-                disabled={!input.trim() || loading}
-                loading={loading}
-              />
+            {/* Info section fills space meaningfully */}
+            <View style={styles.infoSection}>
+              <Text style={styles.infoLabel}>COMMON CHANGES TO REPORT</Text>
+              {[
+                'New or changed income',
+                'Change in household size',
+                'New address or phone number',
+                'Change in employment',
+              ].map((item, i) => (
+                <View key={i} style={styles.infoRow}>
+                  <View style={styles.infoDot} />
+                  <Text style={styles.infoText}>{item}</Text>
+                </View>
+              ))}
             </View>
           </>
         )}
@@ -110,7 +130,6 @@ export default function ReportScreen() {
         {/* Result phase */}
         {result && (
           <View style={{ gap: MD }}>
-            {/* Confidence gate */}
             {result.confidence === 'low' ? (
               <>
                 <AccentCard weight="normal" background="tinted" style={{ padding: CARD_PADDING }}>
@@ -122,15 +141,11 @@ export default function ReportScreen() {
               </>
             ) : (
               <>
-                {/* Classification chip */}
-                <View style={styles.classificationRow}>
-                  <View style={styles.classificationChip}>
-                    <Ionicons name="pricetag-outline" size={11} color={NEAR_BLACK} />
-                    <Text style={styles.classificationText}>{result.classification}</Text>
-                  </View>
+                <View style={styles.classificationChip}>
+                  <Ionicons name="pricetag-outline" size={11} color={NEAR_BLACK} />
+                  <Text style={styles.classificationText}>{result.classification}</Text>
                 </View>
 
-                {/* Verdict card */}
                 <AccentCard
                   weight={result.needs_to_report ? 'heavy' : 'normal'}
                   background={result.needs_to_report ? 'tinted' : 'white'}
@@ -140,7 +155,6 @@ export default function ReportScreen() {
                   <Text style={styles.verdictBody}>{result.reasoning}</Text>
                 </AccentCard>
 
-                {/* What to do card */}
                 <View style={styles.actionCard}>
                   <SectionLabel style={{ marginBottom: SM }}>What to do next</SectionLabel>
                   <Text style={styles.actionText}>{result.what_to_do}</Text>
@@ -152,7 +166,6 @@ export default function ReportScreen() {
               </>
             )}
 
-            {/* Start over */}
             <TouchableOpacity onPress={handleStartOver} style={styles.startOverLink}>
               <Text style={styles.startOverText}>Start over</Text>
             </TouchableOpacity>
@@ -161,32 +174,52 @@ export default function ReportScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Sticky footer button (only in input phase) */}
+      {!result && (
+        <View style={[styles.footer, { paddingBottom: insets.bottom + LG }]}>
+          <Button
+            label={loading ? 'Analyzing...' : 'Check this change'}
+            onPress={handleSubmit}
+            disabled={!input.trim() || loading}
+            loading={loading}
+          />
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: CARD_BG },
-  content: { paddingHorizontal: PAGE_HORIZONTAL, paddingTop: SECTION },
-  header: { marginBottom: MD },
-  question: {
-    fontFamily: FONT_FAMILY,
-    fontSize: HEADING_LG,
-    fontWeight: SEMIBOLD as '600',
-    color: TEXT_PRIMARY,
-    marginBottom: SM,
+  header: {
+    backgroundColor: BLACK,
+    paddingHorizontal: PAGE_HORIZONTAL,
+    paddingBottom: LG,
   },
-  subText: {
+  title: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 22,
+    fontWeight: SEMIBOLD as '600',
+    color: WHITE,
+    marginBottom: 4,
+  },
+  subtitle: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
-    color: TEXT_MUTED,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  scroll: { flex: 1, backgroundColor: WHITE },
+  content: {
+    paddingHorizontal: PAGE_HORIZONTAL,
+    paddingTop: LG,
+    paddingBottom: LG,
   },
   textarea: {
     backgroundColor: WHITE,
-    borderWidth: 0.5,
+    borderWidth: 1,
     borderRadius: RADIUS_MD,
     padding: MD,
-    minHeight: 100,
+    minHeight: 110,
     fontSize: BODY_LG,
     fontFamily: FONT_FAMILY,
     color: TEXT_PRIMARY,
@@ -199,7 +232,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: MD,
   },
-  classificationRow: { marginBottom: MD },
+  infoSection: {
+    marginTop: SECTION,
+    paddingTop: SECTION,
+    borderTopWidth: 0.5,
+    borderTopColor: BORDER,
+  },
+  infoLabel: {
+    fontFamily: FONT_FAMILY,
+    fontSize: CAPTION,
+    color: TEXT_MUTED,
+    letterSpacing: 0.8,
+    marginBottom: MD,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: SM,
+  },
+  infoDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: TEXT_MUTED,
+  },
+  infoText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: BODY,
+    color: TEXT_SECONDARY,
+  },
+  footer: {
+    backgroundColor: WHITE,
+    borderTopWidth: 0.5,
+    borderTopColor: BORDER,
+    paddingHorizontal: PAGE_HORIZONTAL,
+    paddingTop: MD,
+  },
   classificationChip: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,12 +1,5 @@
-// components/ui/Button.tsx
 import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-  ViewStyle,
-} from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { BLACK, WHITE, TEXT_MUTED, NEAR_BLACK, BORDER } from '../../constants/colors';
 import { BODY_LG, MEDIUM, FONT_FAMILY } from '../../constants/typography';
 import { RADIUS_MD } from '../../constants/spacing';
@@ -29,15 +22,21 @@ export function Button({
   style,
 }: ButtonProps) {
   const isPrimary = variant === 'primary';
-  const bgColor = disabled ? BORDER : isPrimary ? BLACK : WHITE;
+
+  const bgColor = disabled ? WHITE : isPrimary ? BLACK : WHITE;
   const textColor = disabled ? TEXT_MUTED : isPrimary ? WHITE : NEAR_BLACK;
+  const borderColor = disabled ? BORDER : isPrimary ? BLACK : BORDER;
 
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.7}
-      style={[styles.base, { backgroundColor: bgColor }, style]}
+      activeOpacity={0.75}
+      style={[
+        styles.base,
+        { backgroundColor: bgColor, borderColor, borderWidth: 1 },
+        style,
+      ]}
     >
       {loading ? (
         <ActivityIndicator color={textColor} size="small" />
@@ -51,15 +50,15 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     width: '100%',
-    paddingVertical: 14,
+    paddingVertical: 15,
     borderRadius: RADIUS_MD,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 0,
   },
   label: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY_LG,
     fontWeight: MEDIUM as '500',
+    letterSpacing: 0.1,
   },
 });

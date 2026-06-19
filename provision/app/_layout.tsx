@@ -4,37 +4,22 @@
 
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { UserProvider } from '../context/UserContext';
-import { PRIMARY_DARK } from '../constants/colors';
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <UserProvider>
         <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
+        <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
-          <Stack.Screen
-            name="onboarding/_layout"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="(tabs)/_layout"
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="(tabs)" />
           <Stack.Screen
             name="recovery"
-            options={{
-              presentation: 'modal',
-              headerShown: false,
-            }}
+            options={{ presentation: 'modal' }}
           />
         </Stack>
       </UserProvider>
