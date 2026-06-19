@@ -10,5 +10,6 @@ __pycache__/
 .venv/
 venv/
 
-# Backend secrets — never commit
+# Secrets and machine-specific env — never commit
 backend/.env
+frontend/.env
