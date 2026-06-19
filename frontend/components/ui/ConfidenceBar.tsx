@@ -12,17 +12,17 @@ interface ConfidenceBarProps {
 const CONFIG = {
   high: {
     filled: 3,
-    message: 'High confidence — based directly on official policy rules',
+    message: 'High confidence. Based directly on official policy rules.',
     barColor: SAGE,
   },
   medium: {
     filled: 2,
-    message: 'Estimate — your caseworker can confirm the exact amount',
+    message: 'Estimate. Your caseworker can confirm the exact amount.',
     barColor: SAGE,
   },
   low: {
     filled: 1,
-    message: 'Complex situation — please speak with a caseworker directly',
+    message: 'Complex situation. Please speak with a caseworker directly.',
     barColor: CLAY,
   },
 };

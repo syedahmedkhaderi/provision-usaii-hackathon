@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  BLACK, WHITE, BORDER, TEXT_MUTED, TEXT_SECONDARY, NEAR_BLACK, CARD_BG,
+  BLACK, WHITE, BORDER, TEXT_MUTED, TEXT_SECONDARY, NEAR_BLACK, CARD_BG, CLAY,
 } from '../../constants/colors';
 import { FONT_FAMILY, CAPTION, BODY_SM, MEDIUM } from '../../constants/typography';
 import { Deadline } from '../../types';
@@ -32,6 +32,7 @@ export function JourneyTimeline({ deadlines }: JourneyTimelineProps) {
         <View style={styles.dotsRow}>
           {deadlines.map((d) => {
             const isDone = d.status === 'done';
+            const isOverdue = d.status === 'overdue';
             const isUrgent = d.status === 'urgent';
 
             return (
@@ -40,22 +41,23 @@ export function JourneyTimeline({ deadlines }: JourneyTimelineProps) {
                   style={[
                     styles.dot,
                     isDone && styles.dotDone,
+                    isOverdue && styles.dotOverdue,
                     isUrgent && styles.dotUrgent,
-                    !isDone && !isUrgent && styles.dotUpcoming,
+                    !isDone && !isOverdue && !isUrgent && styles.dotUpcoming,
                   ]}
                 >
                   <Ionicons
                     name={
-                      isDone ? 'checkmark' : isUrgent ? 'alert' : 'ellipsis-horizontal'
+                      isDone ? 'checkmark' : isOverdue ? 'flag' : isUrgent ? 'alert' : 'ellipsis-horizontal'
                     }
                     size={13}
-                    color={isDone ? WHITE : isUrgent ? WHITE : TEXT_MUTED}
+                    color={isDone || isOverdue || isUrgent ? WHITE : TEXT_MUTED}
                   />
                 </View>
                 <Text
                   style={[
                     styles.dotLabel,
-                    { color: isDone ? BLACK : isUrgent ? NEAR_BLACK : TEXT_MUTED },
+                    { color: isDone ? BLACK : isOverdue ? CLAY : isUrgent ? NEAR_BLACK : TEXT_MUTED },
                   ]}
                   numberOfLines={1}
                 >
@@ -127,6 +129,9 @@ const styles = StyleSheet.create({
   },
   dotDone: {
     backgroundColor: BLACK,
+  },
+  dotOverdue: {
+    backgroundColor: CLAY,
   },
   dotUrgent: {
     backgroundColor: NEAR_BLACK,

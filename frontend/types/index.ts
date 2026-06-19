@@ -12,7 +12,7 @@ export type IssueType =
   | 'reduction_notice'
   | 'none';
 
-export type DeadlineStatus = 'done' | 'urgent' | 'upcoming';
+export type DeadlineStatus = 'done' | 'urgent' | 'upcoming' | 'overdue';
 
 export interface UserProfile {
   state: State;

@@ -38,7 +38,7 @@ export default function IncomeScreen() {
 
   const handleQuick = (val: number) => {
     setQuickSelected(val);
-    setRawInput(val === 0 ? '' : val.toString());
+    setRawInput(val === 0 ? '' : val.toLocaleString());
   };
 
   const handleInputChange = (text: string) => {

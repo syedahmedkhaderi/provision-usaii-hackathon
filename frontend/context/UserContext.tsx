@@ -2,10 +2,11 @@
 // Global user profile state + storage — Spec Part 6
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { UserProfile, Deadline, RiskProfile, EligibilityEstimate } from '../types';
+import { UserProfile, Deadline, DeadlineStatus, RiskProfile, EligibilityEstimate } from '../types';
 import { loadProfile, saveProfile, clearProfile as clearStorage } from '../services/storageService';
 import { computeDeadlines, computeRiskScore } from '../services/snapEngine';
 import { api, isBackendConfigured } from '../services/apiClient';
+import { SNAP_RULES } from '../constants/snapRules';
 
 interface UserContextType {
   profile: UserProfile | null;
@@ -69,12 +70,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           const serverDeadlines: Deadline[] = [
             {
               id: 'enrolled',
-              title: 'Enrolled in SNAP',
+              title: `Enrolled in ${SNAP_RULES[profile.state].benefitName}`,
               date: profile.enrollmentDate,
               daysUntil: Math.floor((enrollDate.getTime() - today.getTime()) / 86400000),
               documents: [],
               consequence: '',
-              status: 'done',
+              status: 'done' as const,
             },
             ...res.steps.map((step, i) => {
               const dueDate = new Date(step.due_date + 'T00:00:00');
@@ -86,7 +87,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 daysUntil,
                 documents: step.documents,
                 consequence: step.consequence,
-                status: step.status,
+                status: (daysUntil < 0 ? 'overdue' : daysUntil <= 14 ? 'urgent' : 'upcoming') as DeadlineStatus,
               };
             }),
           ];

@@ -106,7 +106,7 @@ export default function ScanScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + LG }]}>
         <Text style={styles.title}>Scan a notice</Text>
-        <Text style={styles.subtitle}>Photograph a letter — we'll explain it.</Text>
+        <Text style={styles.subtitle}>Photograph a letter. We'll explain it.</Text>
       </View>
 
       <ScrollView
@@ -165,7 +165,7 @@ export default function ScanScreen() {
               <View style={styles.degradationBanner}>
                 <Ionicons name="information-circle-outline" size={14} color={NEAR_BLACK} />
                 <Text style={styles.degradationText}>
-                  AI explanation briefly unavailable — showing rule-based answer.
+                  AI explanation briefly unavailable. Showing rule-based answer.
                 </Text>
               </View>
             )}

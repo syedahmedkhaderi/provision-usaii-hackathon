@@ -18,7 +18,7 @@ export function computeDeadlines(profile: UserProfile): Deadline[] {
   // Enrollment milestone (always "done")
   deadlines.push({
     id: 'enrolled',
-    title: 'Enrolled in SNAP',
+    title: `Enrolled in ${rules.benefitName}`,
     date: profile.enrollmentDate,
     daysUntil: Math.floor((enrollDate.getTime() - today.getTime()) / MS_PER_DAY),
     documents: [],
@@ -38,7 +38,7 @@ export function computeDeadlines(profile: UserProfile): Deadline[] {
       daysUntil,
       documents: rules.documents.interimReport,
       consequence: 'Missing this may terminate your benefits',
-      status: daysUntil < 0 ? 'done' : daysUntil <= 14 ? 'urgent' : 'upcoming',
+      status: daysUntil < 0 ? 'overdue' : daysUntil <= 14 ? 'urgent' : 'upcoming',
     });
   }
 
@@ -53,7 +53,7 @@ export function computeDeadlines(profile: UserProfile): Deadline[] {
     daysUntil: daysUntilRecert,
     documents: rules.documents.recertification,
     consequence: 'Benefits end if recertification is not completed',
-    status: daysUntilRecert < 0 ? 'done' : daysUntilRecert <= 14 ? 'urgent' : 'upcoming',
+    status: daysUntilRecert < 0 ? 'overdue' : daysUntilRecert <= 14 ? 'urgent' : 'upcoming',
   });
 
   return deadlines;
@@ -70,6 +70,13 @@ export function computeRiskScore(
   if (profile.issueType !== 'none') {
     score += 45;
     reasons.push('An active issue has been reported');
+  }
+
+  // Overdue deadlines — highest risk
+  const nextOverdue = deadlines.find((d) => d.status === 'overdue');
+  if (nextOverdue) {
+    score += 50;
+    reasons.push(`${nextOverdue.title} is overdue`);
   }
 
   // Deadline proximity
@@ -101,8 +108,12 @@ export function formatDeadlineDate(isoDate: string): string {
   return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }
 
-export function daysLabel(daysUntil: number): string {
+export function daysLabel(daysUntil: number, isoDate?: string): string {
   if (daysUntil === 0) return 'Due today';
   if (daysUntil > 0) return `${daysUntil} days left`;
-  return `Overdue by ${Math.abs(daysUntil)} days`;
+  if (isoDate) {
+    const d = new Date(isoDate + 'T00:00:00');
+    return `Overdue since ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  }
+  return 'Overdue';
 }

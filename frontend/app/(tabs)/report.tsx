@@ -153,7 +153,7 @@ export default function ReportScreen() {
               <View style={styles.degradationBanner}>
                 <Ionicons name="information-circle-outline" size={14} color={NEAR_BLACK} />
                 <Text style={styles.degradationText}>
-                  AI explanation briefly unavailable — showing rule-based answer.
+                  AI explanation briefly unavailable. Showing rule-based answer.
                 </Text>
               </View>
             )}

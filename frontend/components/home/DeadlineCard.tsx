@@ -4,6 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
+  CLAY, CLAY_LIGHT,
 } from '../../constants/colors';
 import {
   BODY, BODY_SM, LABEL_SM, MEDIUM, FONT_FAMILY,
@@ -20,11 +21,12 @@ interface DeadlineCardProps {
 export function DeadlineCard({ deadline }: DeadlineCardProps) {
   const isUrgent = deadline.status === 'urgent';
   const isDone = deadline.status === 'done';
+  const isOverdue = deadline.status === 'overdue';
 
-  const accentWidth = isUrgent ? 3 : 1;
-  const accentColor = isUrgent ? BLACK : isDone ? BORDER : BORDER;
-  const bgColor = isUrgent ? CARD_BG : WHITE;
-  const borderColor = isUrgent ? '#C0C0C0' : BORDER;
+  const accentWidth = isOverdue || isUrgent ? 3 : 1;
+  const accentColor = isOverdue ? CLAY : isUrgent ? BLACK : isDone ? BORDER : BORDER;
+  const bgColor = isOverdue ? CLAY_LIGHT : isUrgent ? CARD_BG : WHITE;
+  const borderColor = isOverdue ? CLAY : isUrgent ? '#C0C0C0' : BORDER;
 
   return (
     <View
@@ -50,12 +52,12 @@ export function DeadlineCard({ deadline }: DeadlineCardProps) {
               { color: isUrgent ? BLACK : TEXT_MUTED },
             ]}
           >
-            {formatDeadlineDate(deadline.date)} - {daysLabel(deadline.daysUntil)}
+            {formatDeadlineDate(deadline.date)} - {daysLabel(deadline.daysUntil, deadline.date)}
           </Text>
         </View>
         <Badge
-          label={isDone ? 'Done' : deadline.daysUntil < 14 ? 'Soon' : 'On track'}
-          variant={isDone ? 'solid' : isUrgent ? 'solid' : 'outline'}
+          label={isDone ? 'Done' : isOverdue ? 'Overdue' : deadline.daysUntil < 14 ? 'Soon' : 'On track'}
+          variant={isDone || isOverdue || isUrgent ? 'solid' : 'outline'}
         />
       </View>
 

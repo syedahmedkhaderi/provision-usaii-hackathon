@@ -27,10 +27,12 @@ function getInsight(
 ): string {
   const next = deadlines.find((d) => d.status !== 'done');
   if (!next) return "You're up to date. Check back when your next renewal period approaches.";
+  if (next.daysUntil < 0)
+    return `Your ${next.title} is overdue. Contact your caseworker immediately.`;
   if (next.daysUntil <= 7)
     return `Your ${next.title} deadline is in ${next.daysUntil} days. Start calling your caseworker today.`;
   if (next.daysUntil <= 30)
-    return `Start gathering documents for your ${next.title} — due in ${next.daysUntil} days.`;
+    return `Start gathering documents for your ${next.title}. Due in ${next.daysUntil} days.`;
   if (recentChange && recentChange !== 'none' && recentChange !== '')
     return "You reported a recent change. Make sure you've contacted your caseworker within the required window.";
   return `Your next action: ${next.title} in ${next.daysUntil} days. Check your roadmap.`;
@@ -79,7 +81,7 @@ export default function HomeScreen() {
 
         {/* Deadline cards */}
         <View style={styles.deadlinesSection}>
-          <SectionLabel style={styles.sectionLabel}>Upcoming</SectionLabel>
+          <SectionLabel style={styles.sectionLabel}>Deadlines</SectionLabel>
           {activeDeadlines.length > 0 ? (
             activeDeadlines.map((d) => <DeadlineCard key={d.id} deadline={d} />)
           ) : (
@@ -139,7 +141,7 @@ export default function HomeScreen() {
             </Text>
             <View style={styles.eligibilityDivider} />
             <Text style={styles.eligibilityDisclaimer}>
-              Estimate only — your caseworker makes the final eligibility determination.
+              Estimate only. Your caseworker makes the final eligibility determination.
             </Text>
           </View>
         )}
@@ -148,7 +150,7 @@ export default function HomeScreen() {
         <View style={styles.aiLimitsCard}>
           <Ionicons name="information-circle-outline" size={15} color={TEXT_MUTED} />
           <Text style={styles.aiLimitsText}>
-            Provision never decides your eligibility. We say "you likely qualify" — only your caseworker can make that determination.
+            Provision never decides your eligibility. We say "you likely qualify." Only your caseworker can make that determination.
           </Text>
         </View>
 

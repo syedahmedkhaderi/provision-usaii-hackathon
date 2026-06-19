@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  SAGE_DARK, SAGE, SAGE_LIGHT, AMBER, AMBER_MID, AMBER_LIGHT, WHITE,
+  SAGE_DARK, SAGE, SAGE_LIGHT, AMBER, AMBER_MID, AMBER_LIGHT, CLAY, CLAY_LIGHT, WHITE,
   TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
@@ -44,26 +44,46 @@ export default function RoadmapScreen() {
           {/* Status banner */}
           <View style={[
             styles.statusBanner,
-            nextUpcoming?.status === 'urgent' ? styles.statusBannerUrgent : styles.statusBannerOk,
+            nextUpcoming?.status === 'overdue' ? styles.statusBannerOverdue
+              : nextUpcoming?.status === 'urgent' ? styles.statusBannerUrgent
+              : styles.statusBannerOk,
           ]}>
             <Ionicons
-              name={nextUpcoming?.status === 'urgent' ? 'warning-outline' : 'checkmark-circle-outline'}
+              name={
+                nextUpcoming?.status === 'overdue' ? 'flag-outline'
+                  : nextUpcoming?.status === 'urgent' ? 'warning-outline'
+                  : 'checkmark-circle-outline'
+              }
               size={18}
-              color={nextUpcoming?.status === 'urgent' ? AMBER_MID : SAGE}
+              color={
+                nextUpcoming?.status === 'overdue' ? CLAY
+                  : nextUpcoming?.status === 'urgent' ? AMBER_MID
+                  : SAGE
+              }
             />
             <View style={{ flex: 1 }}>
               <Text style={[
                 styles.bannerTitle,
-                { color: nextUpcoming?.status === 'urgent' ? '#7A4F1A' : SAGE_DARK },
+                {
+                  color: nextUpcoming?.status === 'overdue' ? '#6B2518'
+                    : nextUpcoming?.status === 'urgent' ? '#7A4F1A'
+                    : SAGE_DARK,
+                },
               ]}>
-                {nextUpcoming?.status === 'urgent' ? 'Action needed soon' : "You're on track"}
+                {nextUpcoming?.status === 'overdue' ? 'Action overdue'
+                  : nextUpcoming?.status === 'urgent' ? 'Action needed soon'
+                  : "You're on track"}
               </Text>
               <Text style={[
                 styles.bannerSub,
-                { color: nextUpcoming?.status === 'urgent' ? AMBER_MID : SAGE },
+                {
+                  color: nextUpcoming?.status === 'overdue' ? CLAY
+                    : nextUpcoming?.status === 'urgent' ? AMBER_MID
+                    : SAGE,
+                },
               ]}>
                 {nextUpcoming
-                  ? `${nextUpcoming.title} — ${daysLabel(nextUpcoming.daysUntil)}`
+                  ? `${nextUpcoming.title}. ${daysLabel(nextUpcoming.daysUntil, nextUpcoming.date)}`
                   : 'No deadlines coming up'}
               </Text>
             </View>
@@ -90,6 +110,7 @@ export default function RoadmapScreen() {
 function RoadmapStep({ deadline, isLast }: { deadline: Deadline; isLast: boolean }) {
   const isDone = deadline.status === 'done';
   const isUrgent = deadline.status === 'urgent';
+  const isOverdue = deadline.status === 'overdue';
   const [gathered, setGathered] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -106,7 +127,7 @@ function RoadmapStep({ deadline, isLast }: { deadline: Deadline; isLast: boolean
     const checkedDocs = deadline.documents.filter((d) => gathered[d]);
     const uncheckedDocs = deadline.documents.filter((d) => !gathered[d]);
     const lines = [
-      `Provision — ${deadline.title}`,
+      `Provision: ${deadline.title}`,
       `Due: ${formatDeadlineDate(deadline.date)}`,
       '',
       ...(checkedDocs.length > 0 ? ['✓ Ready:', ...checkedDocs.map((d) => `  • ${d}`), ''] : []),
@@ -125,22 +146,28 @@ function RoadmapStep({ deadline, isLast }: { deadline: Deadline; isLast: boolean
         <View style={[
           styles.dot,
           isDone && styles.dotDone,
+          isOverdue && styles.dotOverdue,
           isUrgent && styles.dotUrgent,
-          !isDone && !isUrgent && styles.dotUpcoming,
+          !isDone && !isOverdue && !isUrgent && styles.dotUpcoming,
         ]}>
           <Ionicons
-            name={isDone ? 'checkmark' : isUrgent ? 'alert' : 'time-outline'}
+            name={isDone ? 'checkmark' : isOverdue ? 'flag' : isUrgent ? 'alert' : 'time-outline'}
             size={13}
-            color={isDone ? WHITE : isUrgent ? WHITE : TEXT_MUTED}
+            color={isDone || isOverdue || isUrgent ? WHITE : TEXT_MUTED}
           />
         </View>
         {!isLast && <View style={styles.connector} />}
       </View>
 
       {/* Right: card */}
-      <View style={[styles.card, isDone && styles.cardDone]}>
+      <View style={[styles.card, isDone && styles.cardDone, isOverdue && styles.cardOverdue]}>
         <View style={styles.cardHeader}>
           <Text style={[styles.cardTitle, isDone && styles.cardTitleDone]}>{deadline.title}</Text>
+          {isOverdue && (
+            <View style={styles.overduePill}>
+              <Text style={styles.overdueText}>Overdue</Text>
+            </View>
+          )}
           {isUrgent && (
             <View style={styles.urgentPill}>
               <Text style={styles.urgentText}>Soon</Text>
@@ -148,8 +175,8 @@ function RoadmapStep({ deadline, isLast }: { deadline: Deadline; isLast: boolean
           )}
         </View>
 
-        <Text style={[styles.cardDate, isUrgent && styles.cardDateUrgent]}>
-          {formatDeadlineDate(deadline.date)} · {daysLabel(deadline.daysUntil)}
+        <Text style={[styles.cardDate, isUrgent && styles.cardDateUrgent, isOverdue && styles.cardDateOverdue]}>
+          {formatDeadlineDate(deadline.date)} · {daysLabel(deadline.daysUntil, deadline.date)}
         </Text>
 
         {totalDocs > 0 && (
@@ -268,6 +295,9 @@ const styles = StyleSheet.create({
   statusBannerUrgent: {
     backgroundColor: AMBER_LIGHT,
   },
+  statusBannerOverdue: {
+    backgroundColor: CLAY_LIGHT,
+  },
   bannerTitle: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
@@ -301,6 +331,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dotDone: { backgroundColor: SAGE },
+  dotOverdue: { backgroundColor: CLAY },
   dotUrgent: { backgroundColor: AMBER_MID },
   dotUpcoming: { backgroundColor: WHITE, borderWidth: 1, borderColor: BORDER },
   connector: {
@@ -325,6 +356,11 @@ const styles = StyleSheet.create({
     backgroundColor: CARD_BG,
     borderColor: BORDER,
   },
+  cardOverdue: {
+    backgroundColor: CLAY_LIGHT,
+    borderColor: CLAY,
+    borderWidth: 1,
+  },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -340,6 +376,18 @@ const styles = StyleSheet.create({
   },
   cardTitleDone: {
     color: TEXT_MUTED,
+  },
+  overduePill: {
+    backgroundColor: CLAY,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  overdueText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: WHITE,
+    fontWeight: MEDIUM as '500',
   },
   urgentPill: {
     backgroundColor: AMBER_MID,
@@ -362,6 +410,9 @@ const styles = StyleSheet.create({
   },
   cardDateUrgent: {
     color: TEXT_PRIMARY,
+  },
+  cardDateOverdue: {
+    color: CLAY,
   },
   docsSection: {
     marginTop: MD,

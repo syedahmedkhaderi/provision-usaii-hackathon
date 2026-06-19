@@ -33,6 +33,7 @@ export function AppHeader({
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const stateName = state ? SNAP_RULES[state].stateName : '';
+  const benefitName = state ? SNAP_RULES[state].benefitName : '';
 
   const banner = getBanner(riskProfile, nextDeadlineDays);
   const ring = getRingColor(nextDeadlineDays);
@@ -46,7 +47,7 @@ export function AppHeader({
           {subtitle ? (
             <Text style={styles.stateLine}>{subtitle}</Text>
           ) : state ? (
-            <Text style={styles.stateLine}>{`${stateName} · SNAP`}</Text>
+            <Text style={styles.stateLine}>{`${stateName} · ${benefitName}`}</Text>
           ) : null}
         </View>
 
@@ -56,7 +57,9 @@ export function AppHeader({
           activeOpacity={0.7}
           style={[styles.ringOuter, { borderColor: ring.color }]}
         >
-          {nextDeadlineDays != null && nextDeadlineDays <= 60 ? (
+          {nextDeadlineDays != null && nextDeadlineDays < 0 ? (
+            <Ionicons name="warning" size={18} color={CLAY} />
+          ) : nextDeadlineDays != null && nextDeadlineDays <= 60 ? (
             <View style={styles.ringInner}>
               <Text style={[styles.ringDays, { color: ring.color }]}>
                 {nextDeadlineDays}
@@ -96,7 +99,7 @@ function getBanner(
     return {
       icon: 'checkmark-circle-outline' as const,
       title: "You're on track",
-      sub: nextDays != null ? `Next action in ${nextDays} days` : 'No deadlines soon',
+      sub: nextDays != null && nextDays >= 0 ? `Next action in ${nextDays} days` : 'No deadlines soon',
       style: { backgroundColor: SAGE_LIGHT },
       iconColor: SAGE,
       textColor: SAGE_DARK,
