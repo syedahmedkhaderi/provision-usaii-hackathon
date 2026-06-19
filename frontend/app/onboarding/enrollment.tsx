@@ -96,7 +96,11 @@ export default function EnrollmentScreen() {
                 snapToInterval={48}
                 showsVerticalScrollIndicator={false}
                 onMomentumScrollEnd={(e) => {
-                  setYear(Math.round(e.nativeEvent.contentOffset.y / 48));
+                  const index = Math.min(
+                    Math.round(e.nativeEvent.contentOffset.y / 48),
+                    YEARS.length - 1,
+                  );
+                  setYear(YEARS[index]);
                 }}
               >
                 <View style={{ height: 48 }} />

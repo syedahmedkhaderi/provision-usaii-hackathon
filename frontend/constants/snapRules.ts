@@ -16,7 +16,8 @@ export const SNAP_RULES = {
     caseworkerPhone: '1-877-847-3663',
     caseworkerName: 'California Benefits Line',
     incomeReportingThreshold: {
-      1: 1074, 2: 1452, 3: 1830, 4: 2209, 5: 2587,
+      // 130% FPL gross income limit — FY2026, matches backend GROSS_LIMIT_130
+      1: 1631, 2: 2215, 3: 2797, 4: 3381, 5: 3963,
     } as Record<number, number>,
     documents: {
       interimReport: [

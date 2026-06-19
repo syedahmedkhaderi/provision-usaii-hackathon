@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import calendar
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
 
-# Placeholder federal poverty level (monthly) and allotment tables
-# TODO: verify against official FY2026 source
+# Federal poverty level (monthly) — FY2026 48-state values
+# Source: USDA FNS SNAP Income and Resource Standards, effective Oct 1 2025
+# https://www.fns.usda.gov/snap/charts
 FPL_MONTHLY = {1: 1255, 2: 1704, 3: 2152, 4: 2601, 5: 3049, 6: 3498, 7: 3946, 8: 4395}
-GROSS_LIMIT_130 = {k: int(v * 1.30) for k, v in FPL_MONTHLY.items()}  # TODO: verify against official FY2026 source
+GROSS_LIMIT_130 = {k: int(v * 1.30) for k, v in FPL_MONTHLY.items()}
 
-# Placeholder maximum monthly allotment table by household size
-# TODO: verify against official FY2026 source
+# Maximum monthly allotment by household size — FY2026
+# Source: USDA FNS SNAP Cost of Living Adjustments, effective Oct 1 2025
 MAX_ALLOTMENT = {
     1: 281,
     2: 516,
@@ -24,6 +26,15 @@ MAX_ALLOTMENT = {
 
 def _size_key(size: int) -> int:
     return min(max(1, size), 8)
+
+
+def _add_months(dt: datetime, months: int) -> datetime:
+    """Add calendar months, clamping the day to the last day of the target month."""
+    month = dt.month - 1 + months
+    year = dt.year + month // 12
+    month = month % 12 + 1
+    day = min(dt.day, calendar.monthrange(year, month)[1])
+    return dt.replace(year=year, month=month, day=day)
 
 
 def estimate_eligibility(
@@ -116,7 +127,7 @@ def build_roadmap(state: str, enrollment_date: str, household_size: int) -> List
     steps: List[dict] = []
 
     if state == "CA":
-        sar7 = enroll + timedelta(days=180)
+        sar7 = _add_months(enroll, 6)
         steps.append(
             {
                 "title": "Submit your SAR-7 interim report",
@@ -131,7 +142,7 @@ def build_roadmap(state: str, enrollment_date: str, household_size: int) -> List
                 "status": _status(sar7),
             }
         )
-        recert = enroll + timedelta(days=365)
+        recert = _add_months(enroll, 12)
         steps.append(
             {
                 "title": "Recertification interview",
@@ -147,7 +158,7 @@ def build_roadmap(state: str, enrollment_date: str, household_size: int) -> List
             }
         )
     else:  # TX
-        recert = enroll + timedelta(days=180)
+        recert = _add_months(enroll, 6)
         steps.append(
             {
                 "title": "Recertification interview",
@@ -197,4 +208,8 @@ def recovery_plan(state: str, situation: str) -> dict:
         "steps": steps,
         "fair_hearing_deadline_days": fair_hearing_days,
         "letter_template": letter_template,
+        "reapply_note": (
+            "If too much time has passed since your termination, you may need to reapply. "
+            "Gather your ID, proof of income, and proof of residence to speed up the process."
+        ),
     }

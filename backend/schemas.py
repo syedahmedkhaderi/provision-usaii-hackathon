@@ -29,6 +29,7 @@ class ReportRequest(BaseModel):
 class NoticeRequest(BaseModel):
     state: Literal["CA", "TX"]
     notice_text: str | None = None
+    image_base64: str | None = None
 
 
 class RecoveryRequest(BaseModel):

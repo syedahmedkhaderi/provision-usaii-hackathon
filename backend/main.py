@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 import llm_client
-from prompts import ELIGIBILITY_SYSTEM, NOTICE_SYSTEM, RECOVERY_SYSTEM, REPORT_SYSTEM
+from prompts import ELIGIBILITY_SYSTEM, NOTICE_SYSTEM, REPORT_SYSTEM
 
 from schemas import (
     EligibilityRequest,
@@ -123,7 +123,6 @@ def interpret_change(req: ReportRequest):
             user_prompt = (
                 f"State: {req.state}\n"
                 f"Household size: {req.household_context.get('household_size', 1)}\n"
-                f"Monthly income: ${req.household_context.get('current_monthly_income', 0)}\n"
                 f"Change described by user: {req.change_text}\n\n"
                 f"Rule snippets:\n{chr(10).join([s['text'] for s in kb.retrieve(req.state, req.change_text)])}"
             )
@@ -166,13 +165,20 @@ def interpret_notice(req: NoticeRequest):
 
     if not ai_unavailable:
         try:
-            notice_text = req.notice_text or "(no notice text provided)"
-            user_prompt = (
-                f"State: {req.state}\n"
-                f"Notice text:\n{notice_text}\n\n"
-                f"Rule snippets:\n{chr(10).join([s['text'] for s in kb.retrieve(req.state, notice_text)])}"
-            )
-            result = llm_client.call_gemini_json(NOTICE_SYSTEM, user_prompt)
+            if req.image_base64:
+                text_ctx = (
+                    f"State: {req.state}\n"
+                    f"Rule snippets:\n{chr(10).join([s['text'] for s in kb.retrieve(req.state, '')])}"
+                )
+                result = llm_client.call_gemini_vision_json(NOTICE_SYSTEM, text_ctx, req.image_base64)
+            else:
+                notice_text = req.notice_text or "(no notice text provided)"
+                user_prompt = (
+                    f"State: {req.state}\n"
+                    f"Notice text:\n{notice_text}\n\n"
+                    f"Rule snippets:\n{chr(10).join([s['text'] for s in kb.retrieve(req.state, notice_text)])}"
+                )
+                result = llm_client.call_gemini_json(NOTICE_SYSTEM, user_prompt)
         except Exception:
             ai_unavailable = True
 
@@ -210,6 +216,7 @@ def interpret_notice(req: NoticeRequest):
         "deadline_days": result.get("deadline_days"),
         "options": options,
         "citations": [{"label": s["label"], "source": s["source"]} for s in kb.retrieve(req.state, req.notice_text or "", k=3)],
+        "ai_explanation_unavailable": ai_unavailable,
         "disclaimer": _DISCLAIMER,
     }
 

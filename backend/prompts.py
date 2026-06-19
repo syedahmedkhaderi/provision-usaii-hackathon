@@ -85,6 +85,8 @@ Return ONLY a JSON object with these exact keys:
 
 
 # ── Recovery: "My benefits were cut — what do I do?" ─────────────────────────
+# Reserved for a future Gemini-enhanced recovery route.
+# The current /recovery/plan route uses the rules engine only (deterministic).
 
 RECOVERY_SYSTEM = """You are a SNAP recovery guide. The user has experienced a benefit \
 disruption (termination, missed form, reduction). You are given their situation \

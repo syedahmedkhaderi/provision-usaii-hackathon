@@ -38,6 +38,7 @@ _BACKOFF_SECONDS: int = 600  # 10 minutes after all keys fail
 # Keeps the demo deterministic and protects quota on repeated runs.
 
 _cache: dict[str, dict] = {}
+_MAX_CACHE_SIZE = 512
 
 
 def _cache_key(model: str, system: str, user: str) -> str:
@@ -50,6 +51,10 @@ def _cache_get(model: str, system: str, user: str) -> dict | None:
 
 
 def _cache_set(model: str, system: str, user: str, value: dict) -> None:
+    if len(_cache) >= _MAX_CACHE_SIZE:
+        keys = list(_cache.keys())
+        for k in keys[: len(keys) // 2]:
+            del _cache[k]
     _cache[_cache_key(model, system, user)] = value
 
 
