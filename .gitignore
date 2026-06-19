@@ -2,3 +2,13 @@
 hackathon-context/*.pdf
 hackathon-context/*.pptx
 hackathon-context/*.docx
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Backend secrets — never commit
+backend/.env
