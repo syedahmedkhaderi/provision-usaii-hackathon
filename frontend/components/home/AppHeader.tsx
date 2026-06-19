@@ -1,12 +1,13 @@
 // components/home/AppHeader.tsx
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BLACK, WHITE } from '../../constants/colors';
 import {
   DISPLAY, BODY, BODY_SM, LABEL_SM, CAPTION,
-  MEDIUM, FONT_FAMILY,
+  SEMIBOLD, MEDIUM, FONT_FAMILY,
 } from '../../constants/typography';
 import { PAGE_HORIZONTAL, MD, LG } from '../../constants/spacing';
 import { RiskProfile, State } from '../../types';
@@ -21,13 +22,14 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({
-  title = 'Your SNAP status',
+  title = 'Your dashboard',
   subtitle,
   state,
   riskProfile,
   nextDeadlineDays,
 }: AppHeaderProps) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const stateName = state ? SNAP_RULES[state].stateName : '';
 
   const banner = getBanner(riskProfile, nextDeadlineDays);
@@ -41,14 +43,16 @@ export function AppHeader({
           {subtitle ? (
             <Text style={styles.stateLine}>{subtitle}</Text>
           ) : state ? (
-            <Text style={styles.stateLine}>{`${stateName} - SNAP`}</Text>
+            <Text style={styles.stateLine}>{`${stateName} · SNAP`}</Text>
           ) : null}
         </View>
-        <View style={styles.initialsCircle}>
-          <Text style={styles.initials}>
-            {state ? stateName.charAt(0) : 'P'}
-          </Text>
-        </View>
+        <TouchableOpacity
+          onPress={() => router.push('/settings')}
+          activeOpacity={0.7}
+          style={styles.initialsCircle}
+        >
+          <Text style={styles.initials}>{state ?? 'P'}</Text>
+        </TouchableOpacity>
       </View>
 
       {banner && (
@@ -119,7 +123,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FONT_FAMILY,
     fontSize: DISPLAY,
-    fontWeight: MEDIUM as '500',
+    fontWeight: SEMIBOLD as '600',
     color: WHITE,
   },
   stateLine: {

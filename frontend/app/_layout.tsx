@@ -21,6 +21,10 @@ export default function RootLayout() {
             name="recovery"
             options={{ presentation: 'modal' }}
           />
+          <Stack.Screen
+            name="settings"
+            options={{ presentation: 'modal' }}
+          />
         </Stack>
       </UserProvider>
     </SafeAreaProvider>
