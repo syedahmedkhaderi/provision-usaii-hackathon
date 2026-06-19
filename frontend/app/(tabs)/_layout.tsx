@@ -1,14 +1,14 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { BLACK, NEUTRAL_500, NEUTRAL_300, WHITE } from '../../constants/colors';
+import { SAGE, NEUTRAL_500, NEUTRAL_300, WHITE } from '../../constants/colors';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: BLACK,
+        tabBarActiveTintColor: SAGE,
         tabBarInactiveTintColor: NEUTRAL_500,
         tabBarStyle: {
           backgroundColor: WHITE,

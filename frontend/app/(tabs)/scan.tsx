@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  ActivityIndicator, Alert,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY,
+  SAGE_DARK, SAGE, SAGE_LIGHT, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY,
   TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
-  BODY, BODY_SM, BODY_LG, LABEL_SM, HEADING_LG, CAPTION,
+  BODY, BODY_SM, BODY_LG, LABEL_SM, CAPTION,
   MEDIUM, SEMIBOLD, FONT_FAMILY,
 } from '../../constants/typography';
 import {
@@ -23,6 +22,8 @@ import { AccentCard } from '../../components/ui/AccentCard';
 import { ContactBlock } from '../../components/ui/ContactBlock';
 import { SectionLabel } from '../../components/ui/SectionLabel';
 import { Badge } from '../../components/ui/Badge';
+import { ConfidenceBar } from '../../components/ui/ConfidenceBar';
+import { ContextLoadingText } from '../../components/ui/ContextLoadingText';
 import { SNAP_RULES } from '../../constants/snapRules';
 import { scanDocument } from '../../services/llmService';
 import { ScanResult } from '../../types';
@@ -37,12 +38,19 @@ const SUPPORTED = [
   'Renewal reminder',
 ];
 
+const LOADING_MESSAGES = [
+  'Reading your notice...',
+  'Matching against SNAP rules...',
+  'Almost done...',
+];
+
 export default function ScanScreen() {
   const { profile } = useUser();
   const insets = useSafeAreaInsets();
   const [stage, setStage] = useState<Stage>('idle');
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showCitations, setShowCitations] = useState(false);
 
   if (!profile) return null;
   const rules = SNAP_RULES[profile.state];
@@ -90,6 +98,7 @@ export default function ScanScreen() {
     setStage('idle');
     setResult(null);
     setError(null);
+    setShowCitations(false);
   };
 
   return (
@@ -108,10 +117,9 @@ export default function ScanScreen() {
         {/* IDLE */}
         {stage === 'idle' && (
           <>
-            {/* Camera tap area */}
             <TouchableOpacity onPress={showActionSheet} activeOpacity={0.75} style={styles.captureArea}>
               <View style={styles.cameraIconCircle}>
-                <Ionicons name="camera-outline" size={30} color={BLACK} />
+                <Ionicons name="camera-outline" size={30} color={SAGE} />
               </View>
               <Text style={styles.captureTitle}>Tap to photograph</Text>
               <Text style={styles.captureSub}>Or upload from your camera roll</Text>
@@ -124,7 +132,6 @@ export default function ScanScreen() {
               </View>
             )}
 
-            {/* What I can read — grouped list */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionLabel}>WHAT I CAN READ</Text>
             </View>
@@ -138,7 +145,7 @@ export default function ScanScreen() {
                     i < SUPPORTED.length - 1 && styles.supportRowBorder,
                   ]}
                 >
-                  <Ionicons name="checkmark-circle-outline" size={16} color={BLACK} />
+                  <Ionicons name="checkmark-circle-outline" size={16} color={SAGE} />
                   <Text style={styles.supportText}>{item}</Text>
                 </View>
               ))}
@@ -148,17 +155,12 @@ export default function ScanScreen() {
 
         {/* LOADING */}
         {stage === 'loading' && (
-          <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={BLACK} />
-            <Text style={styles.loadingTitle}>Reading your notice...</Text>
-            <Text style={styles.loadingSub}>This takes a few seconds</Text>
-          </View>
+          <ContextLoadingText messages={LOADING_MESSAGES} />
         )}
 
         {/* RESULT */}
         {stage === 'result' && result && (
           <View style={{ gap: MD }}>
-            {/* Degradation banner — shown when AI is unavailable but response is still valid */}
             {result.ai_explanation_unavailable && (
               <View style={styles.degradationBanner}>
                 <Ionicons name="information-circle-outline" size={14} color={NEAR_BLACK} />
@@ -173,7 +175,23 @@ export default function ScanScreen() {
               <Text style={styles.docTypeText}>{result.document_type}</Text>
             </View>
 
-            <AccentCard weight="heavy" background="tinted" style={{ padding: CARD_PADDING }}>
+            {/* Key facts pills */}
+            {result.key_facts && result.key_facts.length > 0 && (
+              <View style={styles.keyFactsRow}>
+                {result.key_facts.map((fact, i) => (
+                  <View key={i} style={styles.keyFactPill}>
+                    <Text style={styles.keyFactText}>{fact}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <AccentCard
+              weight="heavy"
+              background="tinted"
+              accentColorOverride={SAGE}
+              style={{ padding: CARD_PADDING }}
+            >
               <SectionLabel style={{ marginBottom: SM }}>What this notice means</SectionLabel>
               <Text style={styles.explanationText}>{result.plain_explanation}</Text>
               {result.deadline_text && (
@@ -182,6 +200,9 @@ export default function ScanScreen() {
                   <Text style={styles.deadlineText}>Deadline: {result.deadline_text}</Text>
                 </View>
               )}
+              <View style={{ marginTop: MD }}>
+                <ConfidenceBar level={result.confidence ?? 'medium'} />
+              </View>
             </AccentCard>
 
             {result.options.length > 0 && (
@@ -208,15 +229,31 @@ export default function ScanScreen() {
               </View>
             )}
 
-            {/* Citations */}
+            {/* Citations disclosure */}
             {result.citations && result.citations.length > 0 && (
-              <View style={styles.citationsRow}>
-                {result.citations.map((c, i) => (
-                  <View key={i} style={styles.citationChip}>
-                    <Ionicons name="bookmark-outline" size={10} color={TEXT_SECONDARY} />
-                    <Text style={styles.citationText}>{c.label}</Text>
+              <View style={styles.actionCard}>
+                <TouchableOpacity
+                  style={styles.citationToggle}
+                  onPress={() => setShowCitations((v) => !v)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.citationToggleText}>How we got this answer</Text>
+                  <Ionicons
+                    name={showCitations ? 'chevron-up' : 'chevron-down'}
+                    size={14}
+                    color={TEXT_MUTED}
+                  />
+                </TouchableOpacity>
+                {showCitations && (
+                  <View style={styles.citationsList}>
+                    {result.citations.map((c, i) => (
+                      <View key={i} style={styles.citationRow}>
+                        <Ionicons name="bookmark-outline" size={11} color={TEXT_MUTED} />
+                        <Text style={styles.citationItemText}>{c.label}</Text>
+                      </View>
+                    ))}
                   </View>
-                ))}
+                )}
               </View>
             )}
 
@@ -240,7 +277,7 @@ export default function ScanScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: BLACK,
+    backgroundColor: SAGE_DARK,
     paddingHorizontal: PAGE_HORIZONTAL,
     paddingBottom: LG,
   },
@@ -264,12 +301,13 @@ const styles = StyleSheet.create({
   },
   captureArea: {
     borderWidth: 1.5,
-    borderColor: BORDER,
+    borderColor: SAGE,
     borderStyle: 'dashed',
     borderRadius: RADIUS_LG,
     paddingVertical: SECTION,
     alignItems: 'center',
-    backgroundColor: CARD_BG,
+    backgroundColor: SAGE_LIGHT,
+    opacity: 0.85,
   },
   cameraIconCircle: {
     width: 60,
@@ -342,25 +380,6 @@ const styles = StyleSheet.create({
     fontSize: BODY,
     color: TEXT_PRIMARY,
   },
-  loadingCard: {
-    backgroundColor: CARD_BG,
-    borderRadius: RADIUS_LG,
-    padding: SECTION,
-    alignItems: 'center',
-    marginTop: MD,
-  },
-  loadingTitle: {
-    fontFamily: FONT_FAMILY,
-    fontSize: BODY_LG,
-    color: TEXT_SECONDARY,
-    marginTop: MD,
-  },
-  loadingSub: {
-    fontFamily: FONT_FAMILY,
-    fontSize: BODY_SM,
-    color: TEXT_MUTED,
-    marginTop: 4,
-  },
   docTypeChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -376,6 +395,25 @@ const styles = StyleSheet.create({
     fontSize: CAPTION,
     fontWeight: MEDIUM as '500',
     color: NEAR_BLACK,
+  },
+  keyFactsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SM,
+  },
+  keyFactPill: {
+    backgroundColor: SAGE_LIGHT,
+    borderRadius: RADIUS_PILL,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 0.5,
+    borderColor: SAGE,
+  },
+  keyFactText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: SAGE,
+    fontWeight: MEDIUM as '500',
   },
   explanationText: {
     fontFamily: FONT_FAMILY,
@@ -423,6 +461,38 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     marginTop: 2,
   },
+  actionCard: {
+    backgroundColor: WHITE,
+    borderRadius: RADIUS_LG,
+    borderWidth: 0.5,
+    borderColor: BORDER,
+    padding: CARD_PADDING,
+  },
+  citationToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  citationToggleText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: BODY_SM,
+    color: TEXT_MUTED,
+  },
+  citationsList: {
+    gap: 6,
+    marginTop: SM,
+  },
+  citationRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+  },
+  citationItemText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: TEXT_SECONDARY,
+    flex: 1,
+  },
   scanAgainLink: {
     alignItems: 'center',
     marginTop: MD,
@@ -430,7 +500,7 @@ const styles = StyleSheet.create({
   scanAgainText: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
-    color: BLACK,
+    color: NEAR_BLACK,
     fontWeight: MEDIUM as '500',
   },
   degradationBanner: {
@@ -448,27 +518,6 @@ const styles = StyleSheet.create({
     fontSize: BODY_SM,
     color: TEXT_SECONDARY,
     flex: 1,
-  },
-  citationsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SM,
-  },
-  citationChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: CARD_BG,
-    borderRadius: RADIUS_PILL,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 0.5,
-    borderColor: BORDER,
-  },
-  citationText: {
-    fontFamily: FONT_FAMILY,
-    fontSize: LABEL_SM,
-    color: TEXT_SECONDARY,
   },
   disclaimer: {
     fontFamily: FONT_FAMILY,

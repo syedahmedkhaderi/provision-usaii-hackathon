@@ -5,12 +5,11 @@
  * Set EXPO_PUBLIC_API_BASE_URL in frontend/.env (your machine's LAN IP:8000).
  */
 
-import { UserProfile, ReportResult, ScanResult, RecoveryTimeline } from '../types';
+import { UserProfile, ReportResult, ScanResult, RecoveryTimeline, EligibilityEstimate } from '../types';
 import { SNAP_RULES } from '../constants/snapRules';
 import { api, isBackendConfigured } from './apiClient';
 
 // ── analyzeChange ──────────────────────────────────────────────────────────────
-// Powers the Report screen ("Do I need to report this change?")
 
 export async function analyzeChange(
   input: string,
@@ -50,6 +49,7 @@ export async function analyzeChange(
       citations: res.citations,
       ai_explanation_unavailable: res.ai_explanation_unavailable,
       disclaimer: res.disclaimer,
+      call_script: (res as any).call_script,
     };
   } catch (err) {
     console.error('[llmService] analyzeChange failed:', err);
@@ -58,8 +58,6 @@ export async function analyzeChange(
 }
 
 // ── scanDocument ───────────────────────────────────────────────────────────────
-// Powers the Scan screen ("What does this notice mean?")
-// Sends the base64 image to the backend; the backend handles OCR + interpret.
 
 export async function scanDocument(
   imageBase64: string,
@@ -91,6 +89,8 @@ export async function scanDocument(
       citations: res.citations,
       ai_explanation_unavailable: res.ai_explanation_unavailable,
       disclaimer: res.disclaimer,
+      confidence: (res as any).confidence ?? 'medium',
+      key_facts: (res as any).key_facts,
     };
   } catch (err) {
     console.error('[llmService] scanDocument failed:', err);
@@ -99,7 +99,6 @@ export async function scanDocument(
 }
 
 // ── generateRecoveryTimeline ───────────────────────────────────────────────────
-// Powers the Recovery modal
 
 export async function generateRecoveryTimeline(
   profile: UserProfile,
@@ -132,6 +131,52 @@ export async function generateRecoveryTimeline(
     };
   } catch (err) {
     console.error('[llmService] generateRecoveryTimeline failed:', err);
+    return null;
+  }
+}
+
+// ── simulateEligibility ────────────────────────────────────────────────────────
+// Calls /eligibility/check with a modified scenario to power the "What Would Change?" estimator.
+
+interface Scenario {
+  id: string;
+  label: string;
+  incomeChange?: number;
+  householdChange?: number;
+  isJobLoss?: boolean;
+}
+
+export async function simulateEligibility(
+  profile: UserProfile,
+  scenario: Scenario,
+): Promise<EligibilityEstimate | null> {
+  if (!isBackendConfigured()) return null;
+
+  try {
+    const baseIncome = profile.monthlyIncome ?? 0;
+    let simIncome = baseIncome;
+    let simHousehold = profile.householdSize;
+
+    if (scenario.incomeChange) simIncome = Math.max(0, baseIncome + scenario.incomeChange);
+    if (scenario.householdChange) simHousehold = Math.max(1, simHousehold + scenario.householdChange);
+    if (scenario.isJobLoss) simIncome = 0;
+
+    const res = await api.checkEligibility({
+      state: profile.state,
+      household_size: simHousehold,
+      monthly_gross_income: simIncome,
+      has_elderly_or_disabled: false,
+      monthly_rent: 0,
+      dependent_care_cost: 0,
+    });
+
+    return {
+      likelyEligible: res.likely_eligible,
+      benefitRange: res.estimated_monthly_benefit_range,
+      confidence: res.confidence,
+    };
+  } catch (err) {
+    console.error('[llmService] simulateEligibility failed:', err);
     return null;
   }
 }

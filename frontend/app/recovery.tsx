@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import {
-  BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
+  CLAY, BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
 } from '../constants/colors';
 import {
   BODY, BODY_SM, BODY_LG, CAPTION, LABEL_SM, HEADING_LG,
@@ -99,7 +99,7 @@ export default function RecoveryScreen() {
               </Text>
               <TouchableOpacity
                 onPress={handleCopy}
-                style={[styles.copyBtn, { backgroundColor: copied ? TEXT_SECONDARY : BLACK }]}
+                style={[styles.copyBtn, { backgroundColor: copied ? TEXT_SECONDARY : CLAY }]}
                 activeOpacity={0.7}
               >
                 <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={WHITE} />
@@ -111,7 +111,7 @@ export default function RecoveryScreen() {
 
             {/* Reapply note */}
             <View style={styles.reapplyCard}>
-              <Ionicons name="information-circle-outline" size={16} color={BLACK} />
+              <Ionicons name="information-circle-outline" size={16} color={CLAY} />
               <Text style={styles.reapplyText}>{timeline.reapply_note}</Text>
             </View>
           </>
@@ -198,7 +198,7 @@ Sincerely,
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: CARD_BG },
   header: {
-    backgroundColor: BLACK,
+    backgroundColor: CLAY,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: PAGE_HORIZONTAL,
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepDotCritical: {
-    backgroundColor: BLACK,
+    backgroundColor: CLAY,
   },
   stepConnector: {
     flex: 1,

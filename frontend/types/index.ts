@@ -1,5 +1,5 @@
 // types/index.ts
-// Provision — TypeScript Types (Spec Part 4)
+// Provision — TypeScript Types
 
 export type State = 'CA' | 'TX';
 export type ReportingType = 'SAR' | 'QR' | 'unknown';
@@ -19,7 +19,7 @@ export interface UserProfile {
   enrollmentDate: string; // ISO date string 'YYYY-MM-DD'
   lastRecertDate: string | null;
   householdSize: number;
-  monthlyIncome?: number; // gross monthly before taxes; optional (not all users enter)
+  monthlyIncome?: number;
   reportingType: ReportingType;
   recentChange: string;
   issueType: IssueType;
@@ -54,6 +54,12 @@ export interface Citation {
   source: string;
 }
 
+export interface CallScript {
+  opening: string;
+  what_to_say: string;
+  what_to_ask: string;
+}
+
 export interface ReportResult {
   classification: string;
   needs_to_report: boolean;
@@ -62,11 +68,11 @@ export interface ReportResult {
   what_to_do: string;
   contact: string;
   confidence: 'high' | 'medium' | 'low';
-  // enriched by backend
   deadline_days?: number | null;
   citations?: Citation[];
   ai_explanation_unavailable?: boolean;
   disclaimer?: string;
+  call_script?: CallScript;
 }
 
 export interface RecoveryOption {
@@ -81,10 +87,11 @@ export interface ScanResult {
   deadline_text: string | null;
   options: RecoveryOption[];
   contact: string;
-  // enriched by backend
   citations?: Citation[];
   ai_explanation_unavailable?: boolean;
   disclaimer?: string;
+  confidence?: 'high' | 'medium' | 'low';
+  key_facts?: string[];
 }
 
 export interface RecoveryTimeline {
@@ -99,6 +106,6 @@ export interface RecoveryTimeline {
 export interface RecoveryStep {
   title: string;
   description: string;
-  days_estimate: string; // e.g. 'Within 7 days', 'In about 14-30 days'
+  days_estimate: string;
   is_critical: boolean;
 }

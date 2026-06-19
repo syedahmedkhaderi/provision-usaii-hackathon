@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  BLACK, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG, NEAR_BLACK,
+  SAGE, SAGE_DARK, SAGE_LIGHT, CLAY, CLAY_LIGHT, WHITE,
+  TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG, NEAR_BLACK,
 } from '../../constants/colors';
 import {
   BODY, BODY_LG, BODY_SM, CAPTION, LABEL_SM, FONT_FAMILY, MEDIUM, SEMIBOLD,
@@ -14,8 +15,26 @@ import { useUser } from '../../context/UserContext';
 import { AppHeader } from '../../components/home/AppHeader';
 import { JourneyTimeline } from '../../components/home/JourneyTimeline';
 import { DeadlineCard } from '../../components/home/DeadlineCard';
+import { BenefitsEstimator } from '../../components/home/BenefitsEstimator';
 import { SectionLabel } from '../../components/ui/SectionLabel';
 import { SNAP_RULES } from '../../constants/snapRules';
+import { Deadline, RiskProfile } from '../../types';
+
+function getInsight(
+  deadlines: Deadline[],
+  riskProfile: RiskProfile | null,
+  recentChange: string,
+): string {
+  const next = deadlines.find((d) => d.status !== 'done');
+  if (!next) return "You're up to date. Check back when your next renewal period approaches.";
+  if (next.daysUntil <= 7)
+    return `Your ${next.title} deadline is in ${next.daysUntil} days. Start calling your caseworker today.`;
+  if (next.daysUntil <= 30)
+    return `Start gathering documents for your ${next.title} — due in ${next.daysUntil} days.`;
+  if (recentChange && recentChange !== 'none' && recentChange !== '')
+    return "You reported a recent change. Make sure you've contacted your caseworker within the required window.";
+  return `Your next action: ${next.title} in ${next.daysUntil} days. Check your roadmap.`;
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -27,6 +46,8 @@ export default function HomeScreen() {
   const activeDeadlines = deadlines.filter((d) => d.status !== 'done');
   const nextDeadline = activeDeadlines[0];
   const showRecovery = riskProfile?.level === 'high';
+
+  const insight = getInsight(deadlines, riskProfile ?? null, profile.recentChange);
 
   return (
     <View style={styles.container}>
@@ -45,11 +66,11 @@ export default function HomeScreen() {
             activeOpacity={0.7}
             style={styles.recoveryBanner}
           >
-            <Ionicons name="warning-outline" size={18} color={NEAR_BLACK} />
+            <Ionicons name="warning-outline" size={18} color={CLAY} />
             <Text style={styles.recoveryText}>
               Something may have gone wrong. See your recovery steps.
             </Text>
-            <Ionicons name="chevron-forward" size={16} color={NEAR_BLACK} />
+            <Ionicons name="chevron-forward" size={16} color={CLAY} />
           </TouchableOpacity>
         )}
 
@@ -63,7 +84,7 @@ export default function HomeScreen() {
             activeDeadlines.map((d) => <DeadlineCard key={d.id} deadline={d} />)
           ) : (
             <View style={styles.emptyCard}>
-              <Ionicons name="checkmark-circle-outline" size={32} color={TEXT_MUTED} />
+              <Ionicons name="checkmark-circle-outline" size={32} color={SAGE} />
               <Text style={styles.emptyText}>No upcoming deadlines.</Text>
             </View>
           )}
@@ -89,6 +110,21 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* "What Would Change?" Estimator */}
+        <View style={styles.estimatorSection}>
+          <BenefitsEstimator profile={profile} baseline={eligibilityEstimate ?? null} />
+        </View>
+
+        {/* Proactive Insight Card */}
+        <TouchableOpacity
+          style={styles.insightCard}
+          onPress={() => router.push('/(tabs)/roadmap')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="bulb-outline" size={18} color={SAGE} />
+          <Text style={styles.insightText}>{insight}</Text>
+        </TouchableOpacity>
+
         {/* Eligibility estimate card */}
         {eligibilityEstimate && (
           <View style={styles.eligibilityCard}>
@@ -108,7 +144,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* What AI does NOT decide — explicit Responsible AI disclosure */}
+        {/* Responsible AI disclosure */}
         <View style={styles.aiLimitsCard}>
           <Ionicons name="information-circle-outline" size={15} color={TEXT_MUTED} />
           <Text style={styles.aiLimitsText}>
@@ -129,24 +165,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: MD,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: CLAY_LIGHT,
     borderRadius: 14,
     marginHorizontal: PAGE_HORIZONTAL,
     marginTop: MD,
     padding: 14,
     borderLeftWidth: 3,
-    borderLeftColor: BLACK,
+    borderLeftColor: CLAY,
     borderTopWidth: 0.5,
     borderRightWidth: 0.5,
     borderBottomWidth: 0.5,
-    borderColor: BORDER,
+    borderColor: CLAY,
   },
   recoveryText: {
     flex: 1,
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
     fontWeight: MEDIUM as '500',
-    color: NEAR_BLACK,
+    color: CLAY,
   },
   deadlinesSection: {
     marginTop: SECTION,
@@ -182,7 +218,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: BLACK,
+    backgroundColor: SAGE,
     padding: 13,
     borderRadius: RADIUS_MD,
   },
@@ -209,6 +245,28 @@ const styles = StyleSheet.create({
     fontSize: BODY,
     fontWeight: MEDIUM as '500',
     color: TEXT_PRIMARY,
+  },
+  estimatorSection: {
+    marginTop: MD,
+  },
+  insightCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SM,
+    marginHorizontal: PAGE_HORIZONTAL,
+    marginTop: MD,
+    padding: MD,
+    backgroundColor: SAGE_LIGHT,
+    borderRadius: RADIUS_MD,
+    borderWidth: 0.5,
+    borderColor: SAGE,
+  },
+  insightText: {
+    flex: 1,
+    fontFamily: FONT_FAMILY,
+    fontSize: BODY,
+    color: SAGE_DARK,
+    lineHeight: 18,
   },
   eligibilityCard: {
     backgroundColor: WHITE,

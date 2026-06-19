@@ -4,7 +4,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { BLACK, WHITE } from '../../constants/colors';
+import {
+  SAGE_DARK, SAGE_LIGHT, SAGE, AMBER_LIGHT, AMBER_MID, CLAY_LIGHT, CLAY, WHITE,
+} from '../../constants/colors';
 import {
   DISPLAY, BODY, BODY_SM, LABEL_SM, CAPTION,
   SEMIBOLD, MEDIUM, FONT_FAMILY,
@@ -33,6 +35,7 @@ export function AppHeader({
   const stateName = state ? SNAP_RULES[state].stateName : '';
 
   const banner = getBanner(riskProfile, nextDeadlineDays);
+  const ring = getRingColor(nextDeadlineDays);
 
   return (
     <View style={[styles.header, { paddingTop: insets.top + MD }]}>
@@ -46,21 +49,32 @@ export function AppHeader({
             <Text style={styles.stateLine}>{`${stateName} · SNAP`}</Text>
           ) : null}
         </View>
+
+        {/* Countdown ring */}
         <TouchableOpacity
           onPress={() => router.push('/settings')}
           activeOpacity={0.7}
-          style={styles.initialsCircle}
+          style={[styles.ringOuter, { borderColor: ring.color }]}
         >
-          <Text style={styles.initials}>{state ?? 'P'}</Text>
+          {nextDeadlineDays != null && nextDeadlineDays <= 60 ? (
+            <View style={styles.ringInner}>
+              <Text style={[styles.ringDays, { color: ring.color }]}>
+                {nextDeadlineDays}
+              </Text>
+              <Text style={[styles.ringLabel, { color: ring.color }]}>days</Text>
+            </View>
+          ) : (
+            <Ionicons name="checkmark" size={18} color={SAGE} />
+          )}
         </TouchableOpacity>
       </View>
 
       {banner && (
         <View style={[styles.banner, banner.style]}>
-          <Ionicons name={banner.icon} size={20} color={WHITE} />
+          <Ionicons name={banner.icon} size={18} color={banner.iconColor} />
           <View style={styles.bannerText}>
-            <Text style={styles.bannerTitle}>{banner.title}</Text>
-            <Text style={styles.bannerSub}>{banner.sub}</Text>
+            <Text style={[styles.bannerTitle, { color: banner.textColor }]}>{banner.title}</Text>
+            <Text style={[styles.bannerSub, { color: banner.subColor }]}>{banner.sub}</Text>
           </View>
         </View>
       )}
@@ -68,16 +82,25 @@ export function AppHeader({
   );
 }
 
+function getRingColor(days: number | null | undefined) {
+  if (days == null || days > 30) return { color: SAGE };
+  if (days > 7) return { color: AMBER_MID };
+  return { color: CLAY };
+}
+
 function getBanner(
   risk: RiskProfile | null | undefined,
-  nextDays: number | null | undefined
+  nextDays: number | null | undefined,
 ) {
   if (!risk || risk.level === 'low') {
     return {
       icon: 'checkmark-circle-outline' as const,
       title: "You're on track",
       sub: nextDays != null ? `Next action in ${nextDays} days` : 'No deadlines soon',
-      style: { backgroundColor: 'rgba(255,255,255,0.10)' },
+      style: { backgroundColor: SAGE_LIGHT },
+      iconColor: SAGE,
+      textColor: SAGE_DARK,
+      subColor: SAGE,
     };
   }
   if (risk.level === 'medium') {
@@ -85,28 +108,26 @@ function getBanner(
       icon: 'time-outline' as const,
       title: 'Action coming up',
       sub: risk.reasons[0] || 'A deadline is approaching',
-      style: {
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-      },
+      style: { backgroundColor: AMBER_LIGHT },
+      iconColor: AMBER_MID,
+      textColor: '#7A4F1A',
+      subColor: AMBER_MID,
     };
   }
   return {
     icon: 'warning-outline' as const,
     title: 'Attention needed',
     sub: risk.reasons[0] || 'Action required',
-    style: {
-      backgroundColor: 'rgba(255,255,255,0.15)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.4)',
-    },
+    style: { backgroundColor: CLAY_LIGHT },
+    iconColor: CLAY,
+    textColor: '#6B2518',
+    subColor: CLAY,
   };
 }
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: BLACK,
+    backgroundColor: SAGE_DARK,
     paddingHorizontal: PAGE_HORIZONTAL,
     paddingBottom: LG,
   },
@@ -117,7 +138,7 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontFamily: FONT_FAMILY,
     fontSize: CAPTION,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.55)',
     marginBottom: 4,
   },
   title: {
@@ -132,19 +153,29 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.65)',
     marginTop: 2,
   },
-  initialsCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  ringOuter: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 3,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  initials: {
+  ringInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringDays: {
     fontFamily: FONT_FAMILY,
-    fontSize: BODY,
-    fontWeight: MEDIUM as '500',
-    color: WHITE,
+    fontSize: CAPTION,
+    fontWeight: SEMIBOLD as '600',
+    lineHeight: 12,
+  },
+  ringLabel: {
+    fontFamily: FONT_FAMILY,
+    fontSize: 8,
+    lineHeight: 10,
   },
   banner: {
     flexDirection: 'row',
@@ -159,12 +190,10 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
     fontWeight: MEDIUM as '500',
-    color: WHITE,
   },
   bannerSub: {
     fontFamily: FONT_FAMILY,
     fontSize: LABEL_SM,
-    color: 'rgba(255,255,255,0.7)',
     marginTop: 1,
   },
 });

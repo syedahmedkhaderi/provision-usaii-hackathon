@@ -1,37 +1,42 @@
-// constants/colors.ts
-// PROVISION — Grayscale palette only.
-// FRONTEND RULES override: black, white, and gradients of them. No color accents.
+// constants/colors.ts — Provision warm palette (SAGE / AMBER / CLAY)
 
-// NOTE: The spec's teal/amber/coral tokens are SUPERSEDED.
-// Status differentiation is done via icon style, weight, and fill density.
+// Core warm anchors
+export const SAGE = '#5B7B6F';
+export const SAGE_LIGHT = '#EBF2EF';
+export const SAGE_DARK = '#3D5C52';
 
+export const AMBER = '#C17F3A';
+export const AMBER_LIGHT = '#FDF3E7';
+export const AMBER_MID = '#D97706';
+
+export const CLAY = '#A8432B';
+export const CLAY_LIGHT = '#FAEAE6';
+
+// Neutrals (unchanged names — all imports stay valid)
 export const BLACK = '#000000';
-export const NEAR_BLACK = '#1A1A1A'; // primary text
-export const TEXT_PRIMARY = '#2C2C2C'; // primary text
-export const TEXT_SECONDARY = '#6B6B6B'; // secondary text
-export const TEXT_MUTED = '#999999'; // muted text, captions
-export const BORDER = '#E0E0E0'; // borders, dividers
-export const CARD_BG = '#F5F5F5'; // card backgrounds
-export const BG = '#FAFAFA'; // page background
-export const WHITE = '#FFFFFF'; // card backgrounds, white surfaces
+export const NEAR_BLACK = '#1A1A1A';
+export const TEXT_PRIMARY = '#2C2C2C';
+export const TEXT_SECONDARY = '#6B6B6B';
+export const TEXT_MUTED = '#999999';
+export const BORDER = '#E0E0E0';
+export const CARD_BG = '#F5F5F5';
+export const BG = '#FAFAFA';
+export const WHITE = '#FFFFFF';
 
-// Semantic mappings (kept for code compatibility but all grayscale)
-// Status is now conveyed through icon style + fill density, not hue.
-export const PRIMARY = BLACK;
-export const PRIMARY_DARK = BLACK;
-export const PRIMARY_LIGHT = CARD_BG;
-export const PRIMARY_MID = TEXT_SECONDARY;
+// Semantic names mapped to new warm values (backward-compatible)
+export const PRIMARY = SAGE;
+export const PRIMARY_DARK = SAGE_DARK;
+export const PRIMARY_LIGHT = SAGE_LIGHT;
+export const PRIMARY_MID = AMBER_MID;
 
-// These are kept as grayscale equivalents for any code referencing them
-export const AMBER = TEXT_SECONDARY;
-export const AMBER_LIGHT = CARD_BG;
-export const AMBER_DARK = NEAR_BLACK;
+export const DANGER = CLAY;
+export const DANGER_LIGHT = CLAY_LIGHT;
+export const DANGER_DARK = CLAY;
 
-export const DANGER = NEAR_BLACK;
-export const DANGER_LIGHT = CARD_BG;
-export const DANGER_DARK = NEAR_BLACK;
+// Legacy aliases kept for any lingering references
+export const AMBER_DARK = AMBER;
 
-// Neutrals (used throughout)
+// Neutrals with numbered names
 export const NEUTRAL_900 = NEAR_BLACK;
 export const NEUTRAL_800 = TEXT_PRIMARY;
 export const NEUTRAL_700 = TEXT_SECONDARY;

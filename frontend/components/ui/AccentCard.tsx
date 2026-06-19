@@ -1,7 +1,7 @@
 // components/ui/AccentCard.tsx
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { WHITE, BLACK, BORDER, CARD_BG } from '../../constants/colors';
+import { WHITE, SAGE_DARK, BORDER, CARD_BG, SAGE } from '../../constants/colors';
 import { RADIUS_LG } from '../../constants/spacing';
 
 type AccentWeight = 'heavy' | 'normal';
@@ -11,6 +11,8 @@ interface AccentCardProps {
   background?: 'white' | 'tinted';
   children: React.ReactNode;
   style?: ViewStyle;
+  accentColorOverride?: string;
+  backgroundOverride?: string;
 }
 
 export function AccentCard({
@@ -18,10 +20,12 @@ export function AccentCard({
   background = 'white',
   children,
   style,
+  accentColorOverride,
+  backgroundOverride,
 }: AccentCardProps) {
   const accentWidth = weight === 'heavy' ? 3 : 2;
-  const accentColor = weight === 'heavy' ? BLACK : BORDER;
-  const bgColor = background === 'tinted' ? CARD_BG : WHITE;
+  const accentColor = accentColorOverride ?? (weight === 'heavy' ? SAGE : BORDER);
+  const bgColor = backgroundOverride ?? (background === 'tinted' ? CARD_BG : WHITE);
 
   return (
     <View

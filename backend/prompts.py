@@ -1,11 +1,9 @@
 """
 prompts.py  –  System prompts for each Gemini AI flow
-Owner: Ahmed
 
-These are plain string constants imported by Farha's route handlers.
 Each prompt instructs Gemini to:
   - Reason only from the rule snippets passed in the user prompt
-  - Return strict JSON matching the API contract (Section 3)
+  - Return strict JSON matching the API contract
   - Use hedged language ("may", "typically") for uncertain claims
   - Never invent hard thresholds or deadlines not present in the snippets
 """
@@ -31,7 +29,12 @@ Return ONLY a JSON object with these exact keys — no markdown, no extra text:
   "must_report": <true | false>,
   "deadline_days": <integer or null>,
   "reasoning": "<2 to 4 sentences in plain language>",
-  "confidence": "<high | medium | low>"
+  "confidence": "<high | medium | low>",
+  "call_script": {
+    "opening": "Hi, my name is [YOUR NAME]. My case number should be [CASE NUMBER].",
+    "what_to_say": "<one sentence describing what the user should report, filled in based on their change>",
+    "what_to_ask": "Can you confirm if this needs to be reported and which form I should use?"
+  }
 }"""
 
 
@@ -75,6 +78,8 @@ Return ONLY a JSON object with these exact keys:
   "what_it_means": "<2 to 3 plain-language sentences>",
   "urgency": "<urgent | moderate | low>",
   "deadline_days": <integer or null>,
+  "confidence": "<high | medium | low>",
+  "key_facts": ["<short fact 1>", "<short fact 2>", "<short fact 3>"],
   "options": [
     {
       "label": "<short action title>",
@@ -85,8 +90,6 @@ Return ONLY a JSON object with these exact keys:
 
 
 # ── Recovery: "My benefits were cut — what do I do?" ─────────────────────────
-# Reserved for a future Gemini-enhanced recovery route.
-# The current /recovery/plan route uses the rules engine only (deterministic).
 
 RECOVERY_SYSTEM = """You are a SNAP recovery guide. The user has experienced a benefit \
 disruption (termination, missed form, reduction). You are given their situation \

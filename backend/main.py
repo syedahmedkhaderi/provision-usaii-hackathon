@@ -145,15 +145,23 @@ def interpret_change(req: ReportRequest):
         deadline_days = ai_result.get("deadline_days")
         reasoning = ai_result.get("reasoning", "Contact your caseworker to confirm what to do.")
 
+    call_script = ai_result.get("call_script") if ai_result.get("call_script") else {
+        "opening": "Hi, my name is [YOUR NAME]. My case number should be [CASE NUMBER].",
+        "what_to_say": f"I'm calling to report a change in my situation. {req.change_text[:120]}.",
+        "what_to_ask": "Can you confirm if this needs to be reported and which form I should use?",
+    }
+
     return {
         "category": category,
         "must_report": must_report,
         "deadline_days": deadline_days,
         "reasoning": reasoning,
+        "confidence": ai_result.get("confidence", det.get("confidence", "medium") if det else "medium"),
         "citations": [{"label": s["label"], "source": s["source"]} for s in kb.retrieve(req.state, req.change_text, k=3)],
         "caseworker_phone": caseworker,
         "ai_explanation_unavailable": ai_unavailable,
         "disclaimer": _DISCLAIMER,
+        "call_script": call_script,
     }
 
 
@@ -214,6 +222,8 @@ def interpret_notice(req: NoticeRequest):
         "what_it_means": result.get("what_it_means", ""),
         "urgency": result.get("urgency", "urgent"),
         "deadline_days": result.get("deadline_days"),
+        "confidence": result.get("confidence", "medium"),
+        "key_facts": result.get("key_facts", []),
         "options": options,
         "citations": [{"label": s["label"], "source": s["source"]} for s in kb.retrieve(req.state, req.notice_text or "", k=3)],
         "ai_explanation_unavailable": ai_unavailable,

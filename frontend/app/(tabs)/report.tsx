@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, ScrollView,
-  TouchableOpacity, KeyboardAvoidingView, Platform,
+  TouchableOpacity, KeyboardAvoidingView, Platform, Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY,
+  SAGE_DARK, SAGE, SAGE_LIGHT, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY,
   TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
@@ -22,6 +22,9 @@ import { Button } from '../../components/ui/Button';
 import { AccentCard } from '../../components/ui/AccentCard';
 import { ContactBlock } from '../../components/ui/ContactBlock';
 import { SectionLabel } from '../../components/ui/SectionLabel';
+import { ConfidenceBar } from '../../components/ui/ConfidenceBar';
+import { ContextLoadingText } from '../../components/ui/ContextLoadingText';
+import { CallScriptSheet } from '../../components/report/CallScriptSheet';
 import { ExampleChips } from '../../components/report/ExampleChips';
 import { SNAP_RULES } from '../../constants/snapRules';
 import { analyzeChange } from '../../services/llmService';
@@ -36,6 +39,12 @@ const EXAMPLES = [
   'Had a new baby',
 ];
 
+const LOADING_MESSAGES = [
+  'Checking your situation...',
+  'Reviewing official rules...',
+  'Almost done...',
+];
+
 export default function ReportScreen() {
   const { profile } = useUser();
   const insets = useSafeAreaInsets();
@@ -43,6 +52,8 @@ export default function ReportScreen() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ReportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showCitations, setShowCitations] = useState(false);
+  const [showCallScript, setShowCallScript] = useState(false);
 
   if (!profile) return null;
   const rules = SNAP_RULES[profile.state];
@@ -68,13 +79,18 @@ export default function ReportScreen() {
     setInput('');
     setResult(null);
     setError(null);
+    setShowCitations(false);
+    setShowCallScript(false);
+  };
+
+  const handleCallCaseworker = () => {
+    Linking.openURL(`tel:${rules.caseworkerPhone}`);
   };
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: WHITE }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {/* Page header */}
       <View style={[styles.header, { paddingTop: insets.top + LG }]}>
@@ -82,7 +98,6 @@ export default function ReportScreen() {
         <Text style={styles.subtitle}>Describe what changed in plain language.</Text>
       </View>
 
-      {/* Scrollable content */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -90,12 +105,12 @@ export default function ReportScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Input phase */}
-        {!result && (
+        {!result && !loading && (
           <>
             <TextInput
               style={[
                 styles.textarea,
-                { borderColor: input.length > 0 ? BLACK : BORDER },
+                { borderColor: input.length > 0 ? SAGE : BORDER },
               ]}
               value={input}
               onChangeText={setInput}
@@ -109,7 +124,6 @@ export default function ReportScreen() {
 
             {error && <Text style={styles.errorText}>{error}</Text>}
 
-            {/* Info section fills space meaningfully */}
             <View style={styles.infoSection}>
               <Text style={styles.infoLabel}>COMMON CHANGES TO REPORT</Text>
               {[
@@ -127,10 +141,14 @@ export default function ReportScreen() {
           </>
         )}
 
+        {/* Loading */}
+        {loading && (
+          <ContextLoadingText messages={LOADING_MESSAGES} />
+        )}
+
         {/* Result phase */}
-        {result && (
+        {result && !loading && (
           <View style={{ gap: MD }}>
-            {/* Degradation banner — shown when AI is unavailable but rules-based result is still useful */}
             {result.ai_explanation_unavailable && (
               <View style={styles.degradationBanner}>
                 <Ionicons name="information-circle-outline" size={14} color={NEAR_BLACK} />
@@ -147,6 +165,7 @@ export default function ReportScreen() {
                     This situation is complex. Please contact your caseworker directly.
                   </Text>
                 </AccentCard>
+                <ConfidenceBar level="low" onCallCaseworker={handleCallCaseworker} />
                 <ContactBlock label={rules.caseworkerName} phone={rules.caseworkerPhone} />
               </>
             ) : (
@@ -161,40 +180,91 @@ export default function ReportScreen() {
                 <AccentCard
                   weight={result.needs_to_report ? 'heavy' : 'normal'}
                   background={result.needs_to_report ? 'tinted' : 'white'}
+                  accentColorOverride={result.needs_to_report ? SAGE : BORDER}
                   style={{ padding: CARD_PADDING }}
                 >
                   <Text style={styles.verdictTitle}>{result.verdict}</Text>
-                  <Text style={styles.verdictBody}>{result.reasoning}</Text>
+
+                  {/* Deadline row with Rule-based pill */}
                   {result.deadline_days != null && (
                     <View style={styles.deadlineRow}>
                       <Ionicons name="time-outline" size={12} color={NEAR_BLACK} />
                       <Text style={styles.deadlineText}>
                         Report within {result.deadline_days} days
                       </Text>
+                      <View style={styles.ruleBasedPill}>
+                        <Text style={styles.ruleBasedText}>Rule-based ✓</Text>
+                      </View>
                     </View>
                   )}
+
+                  {/* Reasoning with AI-explanation pill */}
+                  <View style={styles.reasoningHeader}>
+                    <Text style={styles.reasoningLabel}>EXPLANATION</Text>
+                    <View style={styles.aiPill}>
+                      <Text style={styles.aiPillText}>AI explanation</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.verdictBody}>{result.reasoning}</Text>
+
+                  <View style={{ marginTop: MD }}>
+                    <ConfidenceBar level={result.confidence} onCallCaseworker={handleCallCaseworker} />
+                  </View>
                 </AccentCard>
 
-                {/* Citations */}
-                {result.citations && result.citations.length > 0 && (
-                  <View style={styles.citationsRow}>
-                    {result.citations.map((c, i) => (
-                      <View key={i} style={styles.citationChip}>
-                        <Ionicons name="bookmark-outline" size={10} color={TEXT_SECONDARY} />
-                        <Text style={styles.citationText}>{c.label}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
+                {/* Human-in-loop separator */}
+                <View style={styles.hilSeparator}>
+                  <Text style={styles.hilText}>AI guidance  ·  Not a caseworker decision</Text>
+                </View>
 
+                {/* What to do next */}
                 <View style={styles.actionCard}>
                   <SectionLabel style={{ marginBottom: SM }}>What to do next</SectionLabel>
                   <Text style={styles.actionText}>{result.what_to_do}</Text>
                   <ContactBlock label={rules.caseworkerName} phone={rules.caseworkerPhone} />
+
+                  {/* Citations disclosure */}
+                  {result.citations && result.citations.length > 0 && (
+                    <TouchableOpacity
+                      style={styles.citationToggle}
+                      onPress={() => setShowCitations((v) => !v)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.citationToggleText}>How we got this answer</Text>
+                      <Ionicons
+                        name={showCitations ? 'chevron-up' : 'chevron-down'}
+                        size={14}
+                        color={TEXT_MUTED}
+                      />
+                    </TouchableOpacity>
+                  )}
+                  {showCitations && result.citations && (
+                    <View style={styles.citationsList}>
+                      {result.citations.map((c, i) => (
+                        <View key={i} style={styles.citationRow}>
+                          <Ionicons name="bookmark-outline" size={11} color={TEXT_MUTED} />
+                          <Text style={styles.citationItemText}>{c.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
                   <Text style={styles.disclaimer}>
                     {result.disclaimer ?? 'Guidance only. Not legal advice. Verify with your caseworker.'}
                   </Text>
                 </View>
+
+                {/* Call script CTA */}
+                {result.call_script && (
+                  <TouchableOpacity
+                    style={styles.callScriptLink}
+                    onPress={() => setShowCallScript(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="call-outline" size={15} color={SAGE} />
+                    <Text style={styles.callScriptLinkText}>Prepare for my call →</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
 
@@ -208,15 +278,24 @@ export default function ReportScreen() {
       </ScrollView>
 
       {/* Sticky footer button (only in input phase) */}
-      {!result && (
+      {!result && !loading && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + LG }]}>
           <Button
-            label={loading ? 'Analyzing...' : 'Check this change'}
+            label="Check this change"
             onPress={handleSubmit}
             disabled={!input.trim() || loading}
             loading={loading}
           />
         </View>
+      )}
+
+      {/* Call script bottom sheet */}
+      {result?.call_script && (
+        <CallScriptSheet
+          visible={showCallScript}
+          script={result.call_script}
+          onClose={() => setShowCallScript(false)}
+        />
       )}
     </KeyboardAvoidingView>
   );
@@ -224,7 +303,7 @@ export default function ReportScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: BLACK,
+    backgroundColor: SAGE_DARK,
     paddingHorizontal: PAGE_HORIZONTAL,
     paddingBottom: LG,
   },
@@ -336,6 +415,70 @@ const styles = StyleSheet.create({
     color: TEXT_PRIMARY,
     lineHeight: 22,
   },
+  deadlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: SM,
+    marginBottom: MD,
+    flexWrap: 'wrap',
+  },
+  deadlineText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: NEAR_BLACK,
+    fontWeight: MEDIUM as '500',
+    flex: 1,
+  },
+  ruleBasedPill: {
+    backgroundColor: SAGE_LIGHT,
+    borderRadius: RADIUS_PILL,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderWidth: 0.5,
+    borderColor: SAGE,
+  },
+  ruleBasedText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: CAPTION,
+    color: SAGE,
+    fontWeight: MEDIUM as '500',
+  },
+  reasoningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SM,
+    marginBottom: 4,
+  },
+  reasoningLabel: {
+    fontFamily: FONT_FAMILY,
+    fontSize: CAPTION,
+    color: TEXT_MUTED,
+    letterSpacing: 0.8,
+  },
+  aiPill: {
+    backgroundColor: CARD_BG,
+    borderRadius: RADIUS_PILL,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderWidth: 0.5,
+    borderColor: BORDER,
+  },
+  aiPillText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: CAPTION,
+    color: TEXT_MUTED,
+  },
+  hilSeparator: {
+    alignItems: 'center',
+    paddingVertical: SM,
+  },
+  hilText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: CAPTION,
+    color: TEXT_MUTED,
+    letterSpacing: 0.8,
+  },
   actionCard: {
     backgroundColor: WHITE,
     borderRadius: RADIUS_LG,
@@ -373,38 +516,47 @@ const styles = StyleSheet.create({
     color: TEXT_SECONDARY,
     flex: 1,
   },
-  deadlineRow: {
+  citationToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'space-between',
+    paddingVertical: SM,
+    borderTopWidth: 0.5,
+    borderTopColor: BORDER,
     marginTop: SM,
   },
-  deadlineText: {
+  citationToggleText: {
     fontFamily: FONT_FAMILY,
-    fontSize: LABEL_SM,
-    color: NEAR_BLACK,
-    fontWeight: MEDIUM as '500',
+    fontSize: BODY_SM,
+    color: TEXT_MUTED,
   },
-  citationsRow: {
+  citationsList: {
+    gap: 6,
+    paddingBottom: SM,
+  },
+  citationRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SM,
+    alignItems: 'flex-start',
+    gap: 6,
   },
-  citationChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: CARD_BG,
-    borderRadius: RADIUS_PILL,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 0.5,
-    borderColor: BORDER,
-  },
-  citationText: {
+  citationItemText: {
     fontFamily: FONT_FAMILY,
     fontSize: LABEL_SM,
     color: TEXT_SECONDARY,
+    flex: 1,
+  },
+  callScriptLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    paddingVertical: SM,
+  },
+  callScriptLinkText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: BODY,
+    fontWeight: MEDIUM as '500',
+    color: SAGE,
   },
   startOverLink: {
     alignItems: 'center',
@@ -413,7 +565,7 @@ const styles = StyleSheet.create({
   startOverText: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
-    color: BLACK,
+    color: NEAR_BLACK,
     fontWeight: MEDIUM as '500',
   },
 });
