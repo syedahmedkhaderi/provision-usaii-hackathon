@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { BLACK, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED } from '../../constants/colors';
+import { SAGE, SAGE_DARK, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED } from '../../constants/colors';
 import {
   DISPLAY, HEADING_LG, BODY, BODY_LG, LABEL_SM,
   SEMIBOLD, FONT_FAMILY, LINE_NORMAL, LINE_LOOSE,
@@ -47,7 +47,7 @@ export default function WelcomeScreen() {
         {/* Black header zone */}
         <View style={styles.header}>
           <View style={styles.markCircle}>
-            <Ionicons name="ellipsis-horizontal" size={32} color={WHITE} />
+            <Ionicons name="leaf-outline" size={28} color={WHITE} />
           </View>
           <Text style={styles.brandName}>Provision</Text>
           <Text style={styles.brandSub}>SNAP Navigator</Text>
@@ -64,7 +64,7 @@ export default function WelcomeScreen() {
           <View style={styles.features}>
             {features.map((f, i) => (
               <View key={i} style={styles.featureRow}>
-                <Ionicons name={f.icon} size={18} color={BLACK} />
+                <Ionicons name={f.icon} size={18} color={SAGE} />
                 <Text style={styles.featureText}>{f.text}</Text>
               </View>
             ))}
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1 },
   header: {
     height: 240,
-    backgroundColor: BLACK,
+    backgroundColor: SAGE_DARK,
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomLeftRadius: 0,
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY,
     fontSize: DISPLAY,
     fontWeight: SEMIBOLD as '600',
-    color: BLACK,
+    color: SAGE,
     marginBottom: XL,
   },
   body: {

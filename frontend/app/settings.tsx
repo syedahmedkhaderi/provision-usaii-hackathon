@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY,
+  SAGE, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY,
   TEXT_MUTED, BORDER, CARD_BG,
 } from '../constants/colors';
 import {
@@ -125,7 +125,7 @@ export default function SettingsScreen() {
                 style={styles.stepBtn}
                 activeOpacity={0.7}
               >
-                <Ionicons name="remove" size={18} color={householdSize <= 1 ? TEXT_MUTED : BLACK} />
+                <Ionicons name="remove" size={18} color={householdSize <= 1 ? TEXT_MUTED : SAGE} />
               </TouchableOpacity>
               <Text style={styles.stepValue}>{householdSize}</Text>
               <TouchableOpacity
@@ -133,7 +133,7 @@ export default function SettingsScreen() {
                 style={styles.stepBtn}
                 activeOpacity={0.7}
               >
-                <Ionicons name="add" size={18} color={householdSize >= 10 ? TEXT_MUTED : BLACK} />
+                <Ionicons name="add" size={18} color={householdSize >= 10 ? TEXT_MUTED : SAGE} />
               </TouchableOpacity>
             </View>
           </View>
@@ -217,7 +217,7 @@ export default function SettingsScreen() {
             <Switch
               value={notifications}
               onValueChange={setNotifications}
-              trackColor={{ false: BORDER, true: BLACK }}
+              trackColor={{ false: BORDER, true: SAGE }}
               thumbColor={WHITE}
             />
           </View>
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: BLACK,
+    backgroundColor: SAGE,
     paddingHorizontal: PAGE_HORIZONTAL,
     paddingBottom: LG,
   },
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: CARD_BG,
   },
   segmentActive: {
-    backgroundColor: BLACK,
+    backgroundColor: SAGE,
   },
   segmentText: {
     fontFamily: FONT_FAMILY,
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
   },
   dateItemSelected: {
-    color: BLACK,
+    color: SAGE,
     fontWeight: SEMIBOLD as '600',
   },
   dateDisplay: {
@@ -449,12 +449,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioCircleActive: { borderColor: BLACK },
+  radioCircleActive: { borderColor: SAGE },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: BLACK,
+    backgroundColor: SAGE,
   },
 
   // Notifications toggle

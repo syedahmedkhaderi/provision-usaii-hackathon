@@ -1,7 +1,7 @@
 // components/onboarding/ProgressDots.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { BLACK, BORDER, TEXT_MUTED } from '../../constants/colors';
+import { SAGE, BORDER, TEXT_MUTED } from '../../constants/colors';
 import { LABEL_SM, FONT_FAMILY } from '../../constants/typography';
 
 interface ProgressDotsProps {
@@ -21,7 +21,7 @@ export function ProgressDots({ total, current }: ProgressDotsProps) {
             key={i}
             style={[
               styles.dot,
-              { backgroundColor: i < current ? BLACK : BORDER },
+              { backgroundColor: i < current ? SAGE : BORDER },
             ]}
           />
         ))}

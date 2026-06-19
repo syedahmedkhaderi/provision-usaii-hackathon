@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { BLACK, WHITE, TEXT_PRIMARY, TEXT_MUTED, BORDER, CARD_BG } from '../../constants/colors';
+import { SAGE, WHITE, TEXT_PRIMARY, TEXT_MUTED, BORDER, CARD_BG } from '../../constants/colors';
 import {
   HEADING_LG, BODY, BODY_SM, HEADING_SM,
   SEMIBOLD, MEDIUM, FONT_FAMILY,
@@ -51,14 +51,14 @@ export default function StateScreen() {
                   styles.card,
                   {
                     borderWidth: isSelected ? 2 : 0.5,
-                    borderColor: isSelected ? BLACK : BORDER,
+                    borderColor: isSelected ? SAGE : BORDER,
                   },
                 ]}
               >
                 <View
                   style={[
                     styles.stateCircle,
-                    { backgroundColor: isSelected ? BLACK : CARD_BG },
+                    { backgroundColor: isSelected ? SAGE : CARD_BG },
                   ]}
                 >
                   <Text
@@ -75,7 +75,7 @@ export default function StateScreen() {
                   <Text style={styles.cardSub}>{s.sub}</Text>
                 </View>
                 {isSelected && (
-                  <Ionicons name="checkmark-circle" size={20} color={BLACK} />
+                  <Ionicons name="checkmark-circle" size={20} color={SAGE} />
                 )}
               </TouchableOpacity>
             );

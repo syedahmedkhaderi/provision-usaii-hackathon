@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  BLACK, WHITE, TEXT_PRIMARY, TEXT_MUTED, BORDER, CARD_BG,
+  SAGE, WHITE, TEXT_PRIMARY, TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
   HEADING_LG, BODY, BODY_SM, BODY_LG,
@@ -46,7 +46,7 @@ export default function CompleteScreen() {
         <ProgressDots total={7} current={7} />
 
         <View style={styles.iconWrap}>
-          <Ionicons name="checkmark" size={44} color={BLACK} />
+          <Ionicons name="checkmark" size={44} color={SAGE} />
         </View>
 
         <Text style={styles.title}>You're all set.</Text>
@@ -82,7 +82,7 @@ export default function CompleteScreen() {
 
         {/* Notification opt-in */}
         <View style={styles.notifCard}>
-          <Ionicons name="notifications-outline" size={20} color={BLACK} />
+          <Ionicons name="notifications-outline" size={20} color={SAGE} />
           <View style={styles.notifText}>
             <Text style={styles.notifTitle}>Deadline reminders</Text>
             <Text style={styles.notifSub}>30, 14, 7, and 2 days before each deadline</Text>
@@ -90,7 +90,7 @@ export default function CompleteScreen() {
           <Switch
             value={notifEnabled}
             onValueChange={setNotifEnabled}
-            trackColor={{ false: BORDER, true: BLACK }}
+            trackColor={{ false: BORDER, true: SAGE }}
             thumbColor={WHITE}
           />
         </View>

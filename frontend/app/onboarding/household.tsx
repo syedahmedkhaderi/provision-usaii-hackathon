@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  BLACK, WHITE, TEXT_PRIMARY, TEXT_MUTED, BORDER, CARD_BG,
+  SAGE, WHITE, TEXT_PRIMARY, TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
   HEADING_LG, BODY, HEADING_SM,

@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  BLACK, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
+  SAGE, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
   HEADING_LG, BODY, BODY_SM, HEADING_SM, CAPTION,
@@ -63,7 +63,7 @@ export default function ReportingScreen() {
                   styles.card,
                   {
                     borderWidth: isSelected ? 2 : 0.5,
-                    borderColor: isSelected ? BLACK : BORDER,
+                    borderColor: isSelected ? SAGE : BORDER,
                   },
                 ]}
               >
@@ -72,7 +72,7 @@ export default function ReportingScreen() {
                   <Text style={styles.cardSub}>{opt.sub}</Text>
                 </View>
                 {isSelected && (
-                  <Ionicons name="checkmark-circle" size={20} color={BLACK} />
+                  <Ionicons name="checkmark-circle" size={20} color={SAGE} />
                 )}
               </TouchableOpacity>
             );

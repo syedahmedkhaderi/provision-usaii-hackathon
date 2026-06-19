@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
-import { BLACK, WHITE, TEXT_MUTED, NEAR_BLACK, BORDER } from '../../constants/colors';
+import { SAGE, WHITE, TEXT_MUTED, NEAR_BLACK, BORDER } from '../../constants/colors';
 import { BODY_LG, MEDIUM, FONT_FAMILY } from '../../constants/typography';
 import { RADIUS_MD } from '../../constants/spacing';
 
@@ -23,9 +23,9 @@ export function Button({
 }: ButtonProps) {
   const isPrimary = variant === 'primary';
 
-  const bgColor = disabled ? WHITE : isPrimary ? BLACK : WHITE;
+  const bgColor = disabled ? WHITE : isPrimary ? SAGE : WHITE;
   const textColor = disabled ? TEXT_MUTED : isPrimary ? WHITE : NEAR_BLACK;
-  const borderColor = disabled ? BORDER : isPrimary ? BLACK : BORDER;
+  const borderColor = disabled ? BORDER : isPrimary ? SAGE : BORDER;
 
   return (
     <TouchableOpacity

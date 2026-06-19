@@ -7,7 +7,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  BLACK, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
+  SAGE, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
   HEADING_LG, BODY, BODY_SM, SEMIBOLD, MEDIUM, FONT_FAMILY,
@@ -73,7 +73,7 @@ export default function IncomeScreen() {
           <Text style={styles.subText}>Before taxes. An estimate is fine.</Text>
 
           {/* Dollar input */}
-          <View style={[styles.inputRow, { borderColor: rawInput.length > 0 ? BLACK : BORDER }]}>
+          <View style={[styles.inputRow, { borderColor: rawInput.length > 0 ? SAGE : BORDER }]}>
             <Text style={styles.dollarSign}>$</Text>
             <TextInput
               style={styles.input}
@@ -192,8 +192,8 @@ const styles = StyleSheet.create({
     backgroundColor: WHITE,
   },
   quickChipSelected: {
-    backgroundColor: BLACK,
-    borderColor: BLACK,
+    backgroundColor: SAGE,
+    borderColor: SAGE,
   },
   quickChipText: {
     fontFamily: FONT_FAMILY,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
-    color: BLACK,
+    color: SAGE,
     fontWeight: MEDIUM as '500',
   },
   footer: {

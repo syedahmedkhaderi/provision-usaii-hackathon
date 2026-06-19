@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  BLACK, WHITE, TEXT_PRIMARY, TEXT_MUTED, BORDER,
+  SAGE, WHITE, TEXT_PRIMARY, TEXT_MUTED, BORDER,
 } from '../../constants/colors';
 import {
   HEADING_LG, BODY, BODY_SM, BODY_LG, CAPTION,
@@ -75,8 +75,8 @@ export default function ChangesScreen() {
                 style={[
                   styles.chip,
                   {
-                    backgroundColor: isSelected ? BLACK : WHITE,
-                    borderColor: isSelected ? BLACK : BORDER,
+                    backgroundColor: isSelected ? SAGE : WHITE,
+                    borderColor: isSelected ? SAGE : BORDER,
                   },
                 ]}
               >
@@ -98,7 +98,7 @@ export default function ChangesScreen() {
           <TextInput
             style={[
               styles.textarea,
-              { borderColor: text.length > 0 ? BLACK : BORDER },
+              { borderColor: text.length > 0 ? SAGE : BORDER },
             ]}
             value={text}
             onChangeText={setText}

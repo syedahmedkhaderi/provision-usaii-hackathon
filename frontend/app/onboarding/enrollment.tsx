@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  BLACK, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER,
+  SAGE, WHITE, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER,
 } from '../../constants/colors';
 import {
   HEADING_LG, BODY, BODY_SM, HEADING_SM, CAPTION,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
   },
   pickerTextSelected: {
-    color: BLACK,
+    color: SAGE,
     fontWeight: SEMIBOLD as '600',
   },
   helpText: {
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
-    color: BLACK,
+    color: SAGE,
     fontWeight: MEDIUM as '500',
   },
   footer: {
