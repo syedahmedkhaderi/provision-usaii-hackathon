@@ -43,9 +43,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  // Recompute deadlines + risk when profile changes
+  // Recompute deadlines + risk only once onboarding is complete and data is valid
   useEffect(() => {
-    if (profile) {
+    if (profile?.onboardingComplete && profile.enrollmentDate && profile.state) {
       const d = computeDeadlines(profile);
       const r = computeRiskScore(profile, d);
       setDeadlines(d);
@@ -63,8 +63,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = useCallback((partial: Partial<UserProfile>) => {
     setProfileState((prev) => {
-      if (!prev) return prev;
-      const updated = { ...prev, ...partial };
+      const updated = { ...(prev ?? {}), ...partial } as UserProfile;
       saveProfile(updated);
       return updated;
     });

@@ -1,21 +1,28 @@
-// app/(tabs)/scan.tsx — Scan a Notice
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import {
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  ActivityIndicator, Alert, StyleSheet as RN,
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY, TEXT_MUTED, BORDER, CARD_BG,
+  BLACK, WHITE, NEAR_BLACK, TEXT_PRIMARY, TEXT_SECONDARY,
+  TEXT_MUTED, BORDER, CARD_BG,
 } from '../../constants/colors';
 import {
-  BODY, BODY_SM, BODY_LG, CAPTION, LABEL_SM, HEADING_LG,
+  BODY, BODY_SM, BODY_LG, LABEL_SM, HEADING_LG, CAPTION,
   MEDIUM, SEMIBOLD, FONT_FAMILY,
 } from '../../constants/typography';
-import { RADIUS_MD, RADIUS_LG, RADIUS_PILL, PAGE_HORIZONTAL, MD, LG, SECTION, SM, CARD_PADDING } from '../../constants/spacing';
+import {
+  RADIUS_MD, RADIUS_LG, RADIUS_PILL, PAGE_HORIZONTAL,
+  MD, LG, SECTION, SM, CARD_PADDING,
+} from '../../constants/spacing';
 import { useUser } from '../../context/UserContext';
-import { Badge } from '../../components/ui/Badge';
 import { AccentCard } from '../../components/ui/AccentCard';
 import { ContactBlock } from '../../components/ui/ContactBlock';
 import { SectionLabel } from '../../components/ui/SectionLabel';
+import { Badge } from '../../components/ui/Badge';
 import { SNAP_RULES } from '../../constants/snapRules';
 import { scanDocument } from '../../services/llmService';
 import { ScanResult } from '../../types';
@@ -32,6 +39,7 @@ const SUPPORTED = [
 
 export default function ScanScreen() {
   const { profile } = useUser();
+  const insets = useSafeAreaInsets();
   const [stage, setStage] = useState<Stage>('idle');
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,33 +50,18 @@ export default function ScanScreen() {
   const handleCapture = async (useCamera: boolean) => {
     setError(null);
     try {
-      let result: ImagePicker.ImagePickerResult | null = null;
+      let picked: ImagePicker.ImagePickerResult | null = null;
       if (useCamera) {
         const perm = await ImagePicker.requestCameraPermissionsAsync();
-        if (!perm.granted) {
-          setError('Camera permission denied.');
-          return;
-        }
-        result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          base64: true,
-          quality: 0.7,
-        });
+        if (!perm.granted) { setError('Camera permission denied.'); return; }
+        picked = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, base64: true, quality: 0.7 });
       } else {
-        result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          base64: true,
-          quality: 0.7,
-        });
+        picked = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, base64: true, quality: 0.7 });
       }
 
-      if (!result || result.canceled || !result.assets || result.assets.length === 0) return;
-
-      const asset = result.assets[0];
-      if (!asset.base64) {
-        setError('Could not read image data.');
-        return;
-      }
+      if (!picked || picked.canceled || !picked.assets?.length) return;
+      const asset = picked.assets[0];
+      if (!asset.base64) { setError('Could not read image data.'); return; }
 
       setStage('loading');
       const res = await scanDocument(asset.base64, profile);
@@ -79,7 +72,7 @@ export default function ScanScreen() {
         setError("Couldn't read this notice. Check your connection or try again.");
         setStage('idle');
       }
-    } catch (e) {
+    } catch {
       setError('Something went wrong. Try again.');
       setStage('idle');
     }
@@ -100,141 +93,174 @@ export default function ScanScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={{ flex: 1, backgroundColor: WHITE }}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + LG }]}>
         <Text style={styles.title}>Scan a notice</Text>
-        <Text style={styles.subText}>Photograph a letter - we'll explain it.</Text>
+        <Text style={styles.subtitle}>Photograph a letter — we'll explain it.</Text>
       </View>
 
-      {/* IDLE */}
-      {stage === 'idle' && (
-        <>
-          <TouchableOpacity onPress={showActionSheet} activeOpacity={0.7}>
-            <View style={styles.captureArea}>
-              <Ionicons name="camera-outline" size={36} color={BLACK} />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* IDLE */}
+        {stage === 'idle' && (
+          <>
+            {/* Camera tap area */}
+            <TouchableOpacity onPress={showActionSheet} activeOpacity={0.75} style={styles.captureArea}>
+              <View style={styles.cameraIconCircle}>
+                <Ionicons name="camera-outline" size={30} color={BLACK} />
+              </View>
               <Text style={styles.captureTitle}>Tap to photograph</Text>
               <Text style={styles.captureSub}>Or upload from your camera roll</Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
-
-          <View style={styles.supportList}>
-            <SectionLabel style={{ marginBottom: SM }}>What I can read</SectionLabel>
-            {SUPPORTED.map((item, i) => (
-              <View key={i} style={styles.supportRow}>
-                <Ionicons name="checkmark" size={13} color={BLACK} />
-                <Text style={styles.supportText}>{item}</Text>
-              </View>
-            ))}
-          </View>
-        </>
-      )}
-
-      {/* LOADING */}
-      {stage === 'loading' && (
-        <View style={styles.loadingCard}>
-          <ActivityIndicator size="large" color={BLACK} />
-          <Text style={styles.loadingTitle}>Reading your notice...</Text>
-          <Text style={styles.loadingSub}>This takes a few seconds</Text>
-        </View>
-      )}
-
-      {/* RESULT */}
-      {stage === 'result' && result && (
-        <View style={{ gap: MD }}>
-          {/* Document type chip */}
-          <View style={styles.docTypeChip}>
-            <Ionicons name="document-text-outline" size={11} color={NEAR_BLACK} />
-            <Text style={styles.docTypeText}>{result.document_type}</Text>
-          </View>
-
-          {/* Explanation */}
-          <AccentCard weight="heavy" background="tinted" style={{ padding: CARD_PADDING }}>
-            <SectionLabel style={{ marginBottom: SM }}>What this notice means</SectionLabel>
-            <Text style={styles.explanationText}>{result.plain_explanation}</Text>
-            {result.deadline_text && (
-              <View style={styles.deadlineRow}>
-                <Ionicons name="time-outline" size={12} color={NEAR_BLACK} />
-                <Text style={styles.deadlineText}>Deadline: {result.deadline_text}</Text>
+            {error && (
+              <View style={styles.errorBanner}>
+                <Ionicons name="alert-circle-outline" size={14} color={NEAR_BLACK} />
+                <Text style={styles.errorText}>{error}</Text>
               </View>
             )}
-          </AccentCard>
 
-          {/* Options */}
-          {result.options.length > 0 && (
-            <View style={styles.optionsCard}>
-              <SectionLabel style={{ marginBottom: SM }}>Your options</SectionLabel>
-              {result.options.map((opt, i) => (
+            {/* What I can read — grouped list */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionLabel}>WHAT I CAN READ</Text>
+            </View>
+
+            <View style={styles.supportCard}>
+              {SUPPORTED.map((item, i) => (
                 <View
                   key={i}
                   style={[
-                    styles.optionRow,
-                    i < result.options.length - 1 && styles.optionRowBorder,
+                    styles.supportRow,
+                    i < SUPPORTED.length - 1 && styles.supportRowBorder,
                   ]}
                 >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.optionAction}>{opt.action}</Text>
-                    <Text style={styles.optionDetail}>{opt.detail}</Text>
-                  </View>
-                  <Badge
-                    label={
-                      opt.urgency === 'urgent' ? 'Act now' :
-                      opt.urgency === 'medium' ? 'Option' : 'If needed'
-                    }
-                    variant={opt.urgency === 'urgent' ? 'solid' : opt.urgency === 'medium' ? 'outline' : 'muted'}
-                  />
+                  <Ionicons name="checkmark-circle-outline" size={16} color={BLACK} />
+                  <Text style={styles.supportText}>{item}</Text>
                 </View>
               ))}
             </View>
-          )}
+          </>
+        )}
 
-          <ContactBlock label={rules.caseworkerName} phone={rules.caseworkerPhone} />
+        {/* LOADING */}
+        {stage === 'loading' && (
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={BLACK} />
+            <Text style={styles.loadingTitle}>Reading your notice...</Text>
+            <Text style={styles.loadingSub}>This takes a few seconds</Text>
+          </View>
+        )}
 
-          <TouchableOpacity onPress={handleScanAgain} style={styles.scanAgainLink}>
-            <Text style={styles.scanAgainText}>Scan another notice</Text>
-          </TouchableOpacity>
+        {/* RESULT */}
+        {stage === 'result' && result && (
+          <View style={{ gap: MD }}>
+            <View style={styles.docTypeChip}>
+              <Ionicons name="document-text-outline" size={11} color={NEAR_BLACK} />
+              <Text style={styles.docTypeText}>{result.document_type}</Text>
+            </View>
 
-          <View style={{ height: SECTION }} />
-        </View>
-      )}
-    </ScrollView>
+            <AccentCard weight="heavy" background="tinted" style={{ padding: CARD_PADDING }}>
+              <SectionLabel style={{ marginBottom: SM }}>What this notice means</SectionLabel>
+              <Text style={styles.explanationText}>{result.plain_explanation}</Text>
+              {result.deadline_text && (
+                <View style={styles.deadlineRow}>
+                  <Ionicons name="time-outline" size={12} color={NEAR_BLACK} />
+                  <Text style={styles.deadlineText}>Deadline: {result.deadline_text}</Text>
+                </View>
+              )}
+            </AccentCard>
+
+            {result.options.length > 0 && (
+              <View style={styles.optionsCard}>
+                <SectionLabel style={{ marginBottom: SM }}>Your options</SectionLabel>
+                {result.options.map((opt, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.optionRow,
+                      i < result.options.length - 1 && styles.optionRowBorder,
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.optionAction}>{opt.action}</Text>
+                      <Text style={styles.optionDetail}>{opt.detail}</Text>
+                    </View>
+                    <Badge
+                      label={opt.urgency === 'urgent' ? 'Act now' : opt.urgency === 'medium' ? 'Option' : 'If needed'}
+                      variant={opt.urgency === 'urgent' ? 'solid' : opt.urgency === 'medium' ? 'outline' : 'muted'}
+                    />
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <ContactBlock label={rules.caseworkerName} phone={rules.caseworkerPhone} />
+
+            <TouchableOpacity onPress={handleScanAgain} style={styles.scanAgainLink}>
+              <Text style={styles.scanAgainText}>Scan another notice</Text>
+            </TouchableOpacity>
+
+            <View style={{ height: SECTION }} />
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: CARD_BG },
-  content: { paddingHorizontal: PAGE_HORIZONTAL, paddingTop: SECTION },
-  header: { marginBottom: MD },
+  header: {
+    backgroundColor: BLACK,
+    paddingHorizontal: PAGE_HORIZONTAL,
+    paddingBottom: LG,
+  },
   title: {
     fontFamily: FONT_FAMILY,
-    fontSize: HEADING_LG,
+    fontSize: 22,
     fontWeight: SEMIBOLD as '600',
-    color: TEXT_PRIMARY,
-    marginBottom: SM,
+    color: WHITE,
+    marginBottom: 4,
   },
-  subText: {
+  subtitle: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY,
-    color: TEXT_MUTED,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  scroll: { flex: 1, backgroundColor: WHITE },
+  content: {
+    paddingHorizontal: PAGE_HORIZONTAL,
+    paddingTop: LG,
+    paddingBottom: SECTION,
   },
   captureArea: {
-    backgroundColor: WHITE,
     borderWidth: 1.5,
     borderColor: BORDER,
     borderStyle: 'dashed',
     borderRadius: RADIUS_LG,
-    padding: SECTION,
+    paddingVertical: SECTION,
     alignItems: 'center',
-    marginTop: MD,
+    backgroundColor: CARD_BG,
+  },
+  cameraIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: WHITE,
+    borderWidth: 0.5,
+    borderColor: BORDER,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: MD,
   },
   captureTitle: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY_LG,
     fontWeight: MEDIUM as '500',
     color: TEXT_PRIMARY,
-    marginTop: MD,
     marginBottom: 4,
   },
   captureSub: {
@@ -242,34 +268,56 @@ const styles = StyleSheet.create({
     fontSize: BODY_SM,
     color: TEXT_MUTED,
   },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SM,
+    backgroundColor: CARD_BG,
+    borderRadius: RADIUS_MD,
+    padding: MD,
+    marginTop: MD,
+  },
   errorText: {
     fontFamily: FONT_FAMILY,
     fontSize: BODY_SM,
     color: NEAR_BLACK,
-    textAlign: 'center',
-    marginTop: MD,
+    flex: 1,
   },
-  supportList: {
+  sectionHeader: {
     marginTop: SECTION,
+    marginBottom: SM,
+  },
+  sectionLabel: {
+    fontFamily: FONT_FAMILY,
+    fontSize: CAPTION,
+    color: TEXT_MUTED,
+    letterSpacing: 0.8,
+  },
+  supportCard: {
+    backgroundColor: WHITE,
+    borderRadius: RADIUS_LG,
+    borderWidth: 0.5,
+    borderColor: BORDER,
+    overflow: 'hidden',
   },
   supportRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: WHITE,
-    borderRadius: RADIUS_MD,
-    borderWidth: 0.5,
-    borderColor: BORDER,
-    padding: 10,
-    marginBottom: 5,
+    gap: MD,
+    paddingVertical: 13,
+    paddingHorizontal: CARD_PADDING,
+  },
+  supportRowBorder: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: BORDER,
   },
   supportText: {
     fontFamily: FONT_FAMILY,
-    fontSize: BODY_SM,
+    fontSize: BODY,
     color: TEXT_PRIMARY,
   },
   loadingCard: {
-    backgroundColor: WHITE,
+    backgroundColor: CARD_BG,
     borderRadius: RADIUS_LG,
     padding: SECTION,
     alignItems: 'center',

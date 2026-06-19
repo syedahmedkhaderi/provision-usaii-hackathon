@@ -10,6 +10,7 @@ const MS_PER_DAY = 86400000;
 export function computeDeadlines(profile: UserProfile): Deadline[] {
   const rules = SNAP_RULES[profile.state];
   const enrollDate = new Date(profile.enrollmentDate + 'T00:00:00');
+  if (isNaN(enrollDate.getTime())) return [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const deadlines: Deadline[] = [];
