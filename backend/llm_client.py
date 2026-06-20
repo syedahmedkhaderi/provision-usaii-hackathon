@@ -96,8 +96,9 @@ def _extract_text_from_response(data: dict) -> str:
 # ── Availability check ─────────────────────────────────────────────────────────
 
 def is_gemini_available() -> bool:
-    """True when keys are configured and not in the back-off window."""
-    return bool(GEMINI_API_KEYS) and time.time() >= _gemini_disabled_until
+    """True when keys are configured. Note: even if temporarily backed-off,
+    _rotate_call will auto-fallback to gemini-3.1-flash-lite."""
+    return bool(GEMINI_API_KEYS)
 
 
 def probe_gemini() -> bool:
