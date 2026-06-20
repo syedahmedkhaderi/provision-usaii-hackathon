@@ -25,7 +25,9 @@ GEMINI_API_KEYS: list[str] = [
     for k in os.getenv("GEMINI_API_KEYS", "").replace("\n", ",").split(",")
     if k.strip()
 ]
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
+# Hardcoded to gemini-3.1-flash-lite — ignore env var override
+# (Render dashboard may still have GEMINI_MODEL=gemini-2.5-flash which exhausts quota)
+GEMINI_MODEL: str = "gemini-3.1-flash-lite"
 _BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
 # ── Back-off state ─────────────────────────────────────────────────────────────
