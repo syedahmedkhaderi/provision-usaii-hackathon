@@ -31,14 +31,23 @@ export default function RecoveryScreen() {
 
   useEffect(() => {
     if (!profile) return;
+    let mounted = true;
     (async () => {
       const res = await generateRecoveryTimeline(profile);
+      if (!mounted) return;
       setTimeline(res ?? getFallbackTimeline(profile));
       setLoading(false);
     })();
+    return () => { mounted = false; };
   }, [profile]);
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
+        <Text style={{ color: '#2C2C2C', fontSize: 14 }}>Loading...</Text>
+      </View>
+    );
+  }
   const rules = SNAP_RULES[profile.state];
 
   const handleCopy = async () => {
@@ -114,9 +123,14 @@ export default function RecoveryScreen() {
               <Ionicons name="information-circle-outline" size={16} color={CLAY} />
               <Text style={styles.reapplyText}>{timeline.reapply_note}</Text>
             </View>
+
+            {/* Disclaimer */}
+            <Text style={styles.disclaimerText}>
+              Guidance only. Not legal advice. Verify with your caseworker.
+            </Text>
           </>
+
         ) : null}
-        <View style={{ height: SECTION }} />
       </ScrollView>
     </View>
   );
@@ -375,5 +389,14 @@ const styles = StyleSheet.create({
     fontSize: BODY_SM,
     color: TEXT_SECONDARY,
     lineHeight: 18,
+  },
+  disclaimerText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: TEXT_MUTED,
+    textAlign: 'center',
+    lineHeight: 16,
+    marginTop: MD,
+    marginHorizontal: PAGE_HORIZONTAL,
   },
 });

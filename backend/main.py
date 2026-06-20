@@ -26,7 +26,7 @@ from schemas import (
 )
 
 import knowledge_base as kb
-import rules_engine as re
+import rules_engine as rules
 
 app = FastAPI(title="Provision API", version="1.0.0")
 
@@ -53,7 +53,7 @@ def health():
 @app.post("/eligibility/check")
 def check_eligibility(req: EligibilityRequest):
     # Deterministic rules engine result
-    det = re.estimate_eligibility(
+    det = rules.estimate_eligibility(
         req.state,
         req.household_size,
         req.monthly_gross_income,
@@ -84,9 +84,10 @@ def check_eligibility(req: EligibilityRequest):
     likely = det.get("likely_eligible")
     benefit_range = det.get("estimated_monthly_benefit_range")
 
-    # Use AI wording when available for explanation/confidence, but never override hard numbers
+    # Use AI wording when available for explanation, but never override hard numbers
     explanation = ai_result.get("explanation") if ai_result.get("explanation") else det.get("explanation")
-    confidence = ai_result.get("confidence", det.get("confidence", "medium"))
+    # Deterministic confidence takes priority over AI confidence
+    confidence = det.get("confidence", ai_result.get("confidence", "medium"))
 
     return {
         "likely_eligible": likely,
@@ -101,7 +102,7 @@ def check_eligibility(req: EligibilityRequest):
 @app.post("/roadmap/generate")
 def generate_roadmap(req: RoadmapRequest):
     try:
-        steps = re.build_roadmap(req.state, req.enrollment_date, req.household_size)
+        steps = rules.build_roadmap(req.state, req.enrollment_date, req.household_size)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail={"error": str(exc)})
 
@@ -115,14 +116,14 @@ def interpret_change(req: ReportRequest):
     ai_unavailable = not llm_client.is_gemini_available()
 
     # Deterministic classification
-    det = re.classify_change(req.state, req.change_text)
+    det = rules.classify_change(req.state, req.change_text)
 
     ai_result = {}
     if not ai_unavailable:
         try:
             user_prompt = (
                 f"State: {req.state}\n"
-                f"Household size: {req.household_context.get('household_size', 1)}\n"
+                f"Household size: {req.household_context.household_size}\n"
                 f"Change described by user: {req.change_text}\n\n"
                 f"Rule snippets:\n{chr(10).join([s['text'] for s in kb.retrieve(req.state, req.change_text)])}"
             )
@@ -236,12 +237,13 @@ def recovery_plan(req: RecoveryRequest):
     fair_hearing_days = 90
 
     # Pure rules-engine response (no Gemini merge per spec)
-    det = re.recovery_plan(req.state, req.situation)
+    det = rules.recovery_plan(req.state, req.situation)
 
     return {
         "steps": det.get("steps", []),
         "fair_hearing_deadline_days": det.get("fair_hearing_deadline_days", fair_hearing_days),
         "letter_template": det.get("letter_template", ""),
-        "citations": [{"label": s["label"], "source": s["source"]} for s in kb.SNIPPETS.get(req.state, [])],
+        "reapply_note": det.get("reapply_note", ""),
+        "citations": [{"label": s["label"], "source": s["source"]} for s in kb.retrieve(req.state, req.situation, k=3)],
         "disclaimer": _DISCLAIMER,
     }

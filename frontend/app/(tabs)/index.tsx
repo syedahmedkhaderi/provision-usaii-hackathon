@@ -43,7 +43,13 @@ export default function HomeScreen() {
   const { profile, deadlines, riskProfile, eligibilityEstimate } = useUser();
   const { t } = useLanguage();
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
+        <Text style={{ color: '#2C2C2C', fontSize: 14 }}>Loading...</Text>
+      </View>
+    );
+  }
 
   const rules = SNAP_RULES[profile.state];
   const activeDeadlines = deadlines.filter((d) => d.status !== 'done');
