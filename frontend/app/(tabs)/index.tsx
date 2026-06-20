@@ -107,6 +107,9 @@ export default function HomeScreen() {
             style={styles.qaPrimary}
             onPress={() => router.push('/(tabs)/report')}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Report a change"
+            accessibilityHint="Tell us about a life change and find out if you need to report it"
           >
             <Ionicons name="alert-circle-outline" size={14} color={WHITE} />
             <Text style={styles.qaPrimaryText}>{t.reportAChange}</Text>
@@ -115,6 +118,9 @@ export default function HomeScreen() {
             style={styles.qaSecondary}
             onPress={() => router.push('/(tabs)/scan')}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Scan a notice"
+            accessibilityHint="Photograph or type a SNAP letter to understand what it means"
           >
             <Ionicons name="camera-outline" size={14} color={TEXT_PRIMARY} />
             <Text style={styles.qaSecondaryText}>{t.scanANotice}</Text>
