@@ -54,7 +54,13 @@ export default function ScanScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showCitations, setShowCitations] = useState(false);
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
+        <Text style={{ color: '#2C2C2C', fontSize: 14 }}>Loading...</Text>
+      </View>
+    );
+  }
   const rules = SNAP_RULES[profile.state];
 
   const handleCapture = async (useCamera: boolean) => {
@@ -207,15 +213,15 @@ export default function ScanScreen() {
               </View>
             </AccentCard>
 
-            {result.options.length > 0 && (
+            {result.options?.length > 0 && (
               <View style={styles.optionsCard}>
                 <SectionLabel style={{ marginBottom: SM }}>Your options</SectionLabel>
-                {result.options.map((opt, i) => (
+                {(result.options ?? []).map((opt, i) => (
                   <View
                     key={i}
                     style={[
                       styles.optionRow,
-                      i < result.options.length - 1 && styles.optionRowBorder,
+                      i < (result.options?.length ?? 1) - 1 && styles.optionRowBorder,
                     ]}
                   >
                     <View style={{ flex: 1 }}>

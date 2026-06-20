@@ -30,7 +30,13 @@ export default function RoadmapScreen() {
   const { t, lang } = useLanguage();
   const insets = useSafeAreaInsets();
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
+        <Text style={{ color: '#2C2C2C', fontSize: 14 }}>Loading...</Text>
+      </View>
+    );
+  }
   const rules = SNAP_RULES[profile.state];
   const nextUpcoming = deadlines.find(d => d.status !== 'done');
 

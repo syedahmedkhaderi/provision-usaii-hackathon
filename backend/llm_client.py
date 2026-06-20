@@ -120,13 +120,25 @@ def _rotate_call(payload: dict, model: str = GEMINI_MODEL) -> dict:
 
             resp.raise_for_status()
             data = resp.json()
-            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            # Safety check: Gemini may block content without returning text
+            candidates = data.get("candidates", [])
+            if candidates:
+                finish_reason = candidates[0].get("finishReason", "")
+                if finish_reason in ("SAFETY", "RECITATION", "BLOCKED"):
+                    # Content was filtered — return safe fallback, don't disable
+                    return {
+                        "notice_type": "other",
+                        "what_it_means": "The AI could not safely analyze this content. Please contact your caseworker.",
+                        "urgency": "urgent",
+                        "options": [],
+                    }
+            text = candidates[0]["content"]["parts"][0]["text"]
             return _extract_json(text)
 
         except RuntimeError:
             raise
         except Exception as exc:
-            last_error = str(exc)
+            last_error = str(exc).split("?key=")[0]  # strip API key from URL
             continue
 
     # All keys failed.
@@ -174,7 +186,11 @@ def call_gemini_vision_json(
     Used by Farha's /notice/interpret route to OCR + interpret a scanned notice.
     Returns a parsed dict. Raises RuntimeError if all keys fail.
     """
-    cache_key_text = f"[VISION]{text[:100]}[IMG]{image_base64[:32]}"
+    # Strip data-URI prefix if present (e.g., "data:image/jpeg;base64,...")
+    if "," in image_base64 and image_base64.startswith("data:"):
+        image_base64 = image_base64.split(",", 1)[1]
+
+    cache_key_text = f"[VISION]{text[:100]}[IMG]{hashlib.sha256(image_base64.encode()).hexdigest()[:16]}"
 
     cached = _cache_get(GEMINI_MODEL, system_prompt, cache_key_text)
     if cached is not None:

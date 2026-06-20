@@ -55,7 +55,13 @@ export default function ReportScreen() {
   const [showCitations, setShowCitations] = useState(false);
   const [showCallScript, setShowCallScript] = useState(false);
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
+        <Text style={{ color: '#2C2C2C', fontSize: 14 }}>Loading...</Text>
+      </View>
+    );
+  }
   const rules = SNAP_RULES[profile.state];
 
   const handleSubmit = async () => {
