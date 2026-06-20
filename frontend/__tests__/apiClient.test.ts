@@ -10,11 +10,14 @@ describe('API Client', () => {
   });
 
   describe('isBackendConfigured', () => {
-    it('returns false when EXPO_PUBLIC_API_BASE_URL is not set', () => {
+    it('returns true even without env var (defaults to Render backend)', () => {
       const original = process.env.EXPO_PUBLIC_API_BASE_URL;
       delete process.env.EXPO_PUBLIC_API_BASE_URL;
-      const { isBackendConfigured } = require('../services/apiClient');
-      expect(isBackendConfigured()).toBe(false);
+      jest.isolateModules(() => {
+        const { isBackendConfigured } = require('../services/apiClient');
+        // Now defaults to Render URL, so always configured
+        expect(isBackendConfigured()).toBe(true);
+      });
       process.env.EXPO_PUBLIC_API_BASE_URL = original;
     });
 

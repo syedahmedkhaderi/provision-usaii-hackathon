@@ -8,7 +8,9 @@
  * resolves to the phone, not your laptop.
  */
 
-const BASE = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '');
+// Default to the deployed Render backend if no env var is set
+const DEFAULT_BASE = 'https://provision-usaii-hackathon-fdys.onrender.com';
+const BASE = (process.env.EXPO_PUBLIC_API_BASE_URL ?? DEFAULT_BASE).replace(/\/$/, '');
 
 // ── Request types ─────────────────────────────────────────────────────────────
 

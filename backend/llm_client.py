@@ -25,13 +25,13 @@ GEMINI_API_KEYS: list[str] = [
     for k in os.getenv("GEMINI_API_KEYS", "").replace("\n", ",").split(",")
     if k.strip()
 ]
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 _BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
 # ── Back-off state ─────────────────────────────────────────────────────────────
 
 _gemini_disabled_until: float = 0.0
-_BACKOFF_SECONDS: int = 600  # 10 minutes after all keys fail
+_BACKOFF_SECONDS: int = 60  # 1 minute after all keys fail (was 10 min — too aggressive)
 _probe_cache_until: float = 0.0
 _probe_cache_value: bool = False
 
@@ -173,7 +173,7 @@ def _rotate_call(payload: dict, model: str = GEMINI_MODEL) -> dict:
                 # Wrong model name — fail fast, rotation won't fix this.
                 raise RuntimeError(
                     f"Model '{model}' not found (404). "
-                    "Check GEMINI_MODEL in .env — use gemini-2.5-flash."
+                    "Check GEMINI_MODEL in .env — use gemini-3.1-flash-lite."
                 )
 
             resp.raise_for_status()

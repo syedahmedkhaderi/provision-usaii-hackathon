@@ -174,8 +174,8 @@ This creates the Python venv, installs all dependencies, and writes `frontend/.e
 Then open `backend/.env` and paste in your Gemini key(s):
 
 ```
-GEMINI_API_KEYS=your_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_API_KEYS=***
+GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
 ### 2 — Start locally
@@ -237,8 +237,8 @@ Provision is deployed as two separate surfaces:
 Required backend env vars:
 
 ```env
-GEMINI_API_KEYS=your_real_key1,your_real_key2
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_API_KEYS=***
+GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
 ### Frontend
@@ -280,8 +280,8 @@ bash setup.sh
 Then edit `backend/.env`:
 
 ```env
-GEMINI_API_KEYS=your_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_API_KEYS=***
+GEMINI_MODEL=gemini-3.1-flash-lite
 ```
 
 ### Run locally
