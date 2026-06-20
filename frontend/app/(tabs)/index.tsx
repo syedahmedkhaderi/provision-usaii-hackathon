@@ -12,6 +12,7 @@ import {
 } from '../../constants/typography';
 import { PAGE_HORIZONTAL, RADIUS_MD, RADIUS_LG, MD, LG, SECTION, SM } from '../../constants/spacing';
 import { useUser } from '../../context/UserContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { AppHeader } from '../../components/home/AppHeader';
 import { JourneyTimeline } from '../../components/home/JourneyTimeline';
 import { DeadlineCard } from '../../components/home/DeadlineCard';
@@ -19,28 +20,28 @@ import { BenefitsEstimator } from '../../components/home/BenefitsEstimator';
 import { SectionLabel } from '../../components/ui/SectionLabel';
 import { SNAP_RULES } from '../../constants/snapRules';
 import { Deadline, RiskProfile } from '../../types';
+import { Strings } from '../../constants/i18n';
 
 function getInsight(
   deadlines: Deadline[],
   riskProfile: RiskProfile | null,
   recentChange: string,
+  t: Strings,
 ): string {
   const next = deadlines.find((d) => d.status !== 'done');
-  if (!next) return "You're up to date. Check back when your next renewal period approaches.";
-  if (next.daysUntil < 0)
-    return `Your ${next.title} is overdue. Contact your caseworker immediately.`;
-  if (next.daysUntil <= 7)
-    return `Your ${next.title} deadline is in ${next.daysUntil} days. Start calling your caseworker today.`;
-  if (next.daysUntil <= 30)
-    return `Start gathering documents for your ${next.title}. Due in ${next.daysUntil} days.`;
+  if (!next) return t.upToDate;
+  if (next.daysUntil < 0) return t.yourSomethingIsOverdue(next.title);
+  if (next.daysUntil <= 7) return t.yourDeadlineInDays(next.title, next.daysUntil);
+  if (next.daysUntil <= 30) return t.gatherDocumentsFor(next.title, next.daysUntil);
   if (recentChange && recentChange !== 'none' && recentChange !== '')
-    return "You reported a recent change. Make sure you've contacted your caseworker within the required window.";
-  return `Your next action: ${next.title} in ${next.daysUntil} days. Check your roadmap.`;
+    return t.reportedRecentChange;
+  return t.nextAction(next.title, next.daysUntil);
 }
 
 export default function HomeScreen() {
   const router = useRouter();
   const { profile, deadlines, riskProfile, eligibilityEstimate } = useUser();
+  const { t } = useLanguage();
 
   if (!profile) return null;
 
@@ -49,7 +50,7 @@ export default function HomeScreen() {
   const nextDeadline = activeDeadlines[0];
   const showRecovery = riskProfile?.level === 'high';
 
-  const insight = getInsight(deadlines, riskProfile ?? null, profile.recentChange);
+  const insight = getInsight(deadlines, riskProfile ?? null, profile.recentChange, t);
 
   return (
     <View style={styles.container}>
@@ -81,13 +82,15 @@ export default function HomeScreen() {
 
         {/* Deadline cards */}
         <View style={styles.deadlinesSection}>
-          <SectionLabel style={styles.sectionLabel}>Deadlines</SectionLabel>
+          <SectionLabel style={styles.sectionLabel}>{t.deadlines}</SectionLabel>
           {activeDeadlines.length > 0 ? (
-            activeDeadlines.map((d) => <DeadlineCard key={d.id} deadline={d} />)
+            activeDeadlines.map((d) => (
+              <DeadlineCard key={d.id} deadline={d} eligibilityEstimate={eligibilityEstimate} />
+            ))
           ) : (
             <View style={styles.emptyCard}>
               <Ionicons name="checkmark-circle-outline" size={32} color={SAGE} />
-              <Text style={styles.emptyText}>No upcoming deadlines.</Text>
+              <Text style={styles.emptyText}>{t.noUpcomingDeadlines}</Text>
             </View>
           )}
         </View>
@@ -100,7 +103,7 @@ export default function HomeScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="alert-circle-outline" size={14} color={WHITE} />
-            <Text style={styles.qaPrimaryText}>Report a change</Text>
+            <Text style={styles.qaPrimaryText}>{t.reportAChange}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.qaSecondary}
@@ -108,7 +111,7 @@ export default function HomeScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="camera-outline" size={14} color={TEXT_PRIMARY} />
-            <Text style={styles.qaSecondaryText}>Scan a notice</Text>
+            <Text style={styles.qaSecondaryText}>{t.scanANotice}</Text>
           </TouchableOpacity>
         </View>
 
@@ -130,18 +133,18 @@ export default function HomeScreen() {
         {/* Eligibility estimate card */}
         {eligibilityEstimate && (
           <View style={styles.eligibilityCard}>
-            <Text style={styles.eligibilityLabel}>ELIGIBILITY ESTIMATE</Text>
+            <Text style={styles.eligibilityLabel}>{t.eligibilityEstimateLabel}</Text>
             <Text style={styles.eligibilityRange}>
               ${eligibilityEstimate.benefitRange[0].toLocaleString()} – ${eligibilityEstimate.benefitRange[1].toLocaleString()}
-              <Text style={styles.eligibilityUnit}> / month</Text>
+              <Text style={styles.eligibilityUnit}> {t.perMonth}</Text>
             </Text>
             <Text style={styles.eligibilitySub}>
               {profile.householdSize}-person household · {profile.state === 'CA' ? 'California' : 'Texas'}
-              {eligibilityEstimate.confidence === 'low' ? ' · Low confidence' : ''}
+              {eligibilityEstimate.confidence === 'low' ? t.lowConfidence : ''}
             </Text>
             <View style={styles.eligibilityDivider} />
             <Text style={styles.eligibilityDisclaimer}>
-              Estimate only. Your caseworker makes the final eligibility determination.
+              {t.estimateDisclaimer}
             </Text>
           </View>
         )}
@@ -150,7 +153,7 @@ export default function HomeScreen() {
         <View style={styles.aiLimitsCard}>
           <Ionicons name="information-circle-outline" size={15} color={TEXT_MUTED} />
           <Text style={styles.aiLimitsText}>
-            Provision never decides your eligibility. We say "you likely qualify." Only your caseworker can make that determination.
+            {t.aiLimitsText}
           </Text>
         </View>
 

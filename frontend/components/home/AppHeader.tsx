@@ -14,6 +14,8 @@ import {
 import { PAGE_HORIZONTAL, MD, LG } from '../../constants/spacing';
 import { RiskProfile, State } from '../../types';
 import { SNAP_RULES } from '../../constants/snapRules';
+import { useLanguage } from '../../context/LanguageContext';
+import { Strings } from '../../constants/i18n';
 
 interface AppHeaderProps {
   title?: string;
@@ -24,7 +26,7 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({
-  title = 'Your dashboard',
+  title,
   subtitle,
   state,
   riskProfile,
@@ -32,10 +34,11 @@ export function AppHeader({
 }: AppHeaderProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useLanguage();
   const stateName = state ? SNAP_RULES[state].stateName : '';
   const benefitName = state ? SNAP_RULES[state].benefitName : '';
 
-  const banner = getBanner(riskProfile, nextDeadlineDays);
+  const banner = getBanner(riskProfile, nextDeadlineDays, t);
   const ring = getRingColor(nextDeadlineDays);
 
   return (
@@ -43,7 +46,7 @@ export function AppHeader({
       <View style={styles.topRow}>
         <View style={{ flex: 1 }}>
           <Text style={styles.eyebrow}>Provision</Text>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.title}>{title ?? t.dashTitle}</Text>
           {subtitle ? (
             <Text style={styles.stateLine}>{subtitle}</Text>
           ) : state ? (
@@ -94,12 +97,13 @@ function getRingColor(days: number | null | undefined) {
 function getBanner(
   risk: RiskProfile | null | undefined,
   nextDays: number | null | undefined,
+  t: Strings,
 ) {
   if (!risk || risk.level === 'low') {
     return {
       icon: 'checkmark-circle-outline' as const,
-      title: "You're on track",
-      sub: nextDays != null && nextDays >= 0 ? `Next action in ${nextDays} days` : 'No deadlines soon',
+      title: t.onTrack,
+      sub: nextDays != null && nextDays >= 0 ? t.nextActionDays(nextDays) : t.noDeadlinesSoon,
       style: { backgroundColor: SAGE_LIGHT },
       iconColor: SAGE,
       textColor: SAGE_DARK,
@@ -109,8 +113,8 @@ function getBanner(
   if (risk.level === 'medium') {
     return {
       icon: 'time-outline' as const,
-      title: 'Action coming up',
-      sub: risk.reasons[0] || 'A deadline is approaching',
+      title: t.actionComingUp,
+      sub: risk.reasons[0] || t.aDeadlineIsApproaching,
       style: { backgroundColor: AMBER_LIGHT },
       iconColor: AMBER_MID,
       textColor: '#7A4F1A',
@@ -119,8 +123,8 @@ function getBanner(
   }
   return {
     icon: 'warning-outline' as const,
-    title: 'Attention needed',
-    sub: risk.reasons[0] || 'Action required',
+    title: t.attentionNeeded,
+    sub: risk.reasons[0] || t.actionRequired,
     style: { backgroundColor: CLAY_LIGHT },
     iconColor: CLAY,
     textColor: '#6B2518',

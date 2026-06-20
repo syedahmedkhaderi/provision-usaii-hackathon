@@ -2,6 +2,7 @@
 // Provision — TypeScript Types
 
 export type State = 'CA' | 'TX';
+export type Lang = 'en' | 'es';
 export type ReportingType = 'SAR' | 'QR' | 'unknown';
 export type RiskLevel = 'low' | 'medium' | 'high';
 

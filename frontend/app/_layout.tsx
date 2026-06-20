@@ -7,10 +7,12 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { UserProvider } from '../context/UserContext';
+import { LanguageProvider } from '../context/LanguageContext';
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
+      <LanguageProvider>
       <UserProvider>
         <StatusBar style="light" />
         <Stack screenOptions={{ headerShown: false }}>
@@ -27,6 +29,7 @@ export default function RootLayout() {
           />
         </Stack>
       </UserProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

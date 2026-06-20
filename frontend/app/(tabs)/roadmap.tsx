@@ -11,14 +11,23 @@ import {
 } from '../../constants/typography';
 import { RADIUS_LG, PAGE_HORIZONTAL, SM, MD, LG, SECTION, CARD_PADDING } from '../../constants/spacing';
 import { useUser } from '../../context/UserContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { SectionLabel } from '../../components/ui/SectionLabel';
-import { Deadline } from '../../types';
+import { Deadline, EligibilityEstimate } from '../../types';
+import { Strings } from '../../constants/i18n';
 import { formatDeadlineDate, daysLabel } from '../../services/snapEngine';
 import { SNAP_RULES } from '../../constants/snapRules';
 import { saveDocumentChecks, loadDocumentChecks } from '../../services/storageService';
 
+function formatAtRisk(range: [number, number]): string {
+  const [lo, hi] = range;
+  if (lo === hi) return `~$${lo.toLocaleString()}/mo`;
+  return `$${lo.toLocaleString()}–$${hi.toLocaleString()}/mo`;
+}
+
 export default function RoadmapScreen() {
-  const { profile, deadlines } = useUser();
+  const { profile, deadlines, eligibilityEstimate } = useUser();
+  const { t, lang } = useLanguage();
   const insets = useSafeAreaInsets();
 
   if (!profile) return null;
@@ -33,7 +42,7 @@ export default function RoadmapScreen() {
           <View style={styles.headerTop}>
             <View style={{ flex: 1 }}>
               <Text style={styles.eyebrow}>Provision</Text>
-              <Text style={styles.title}>Renewal roadmap</Text>
+              <Text style={styles.title}>{t.roadmapTitle}</Text>
               <Text style={styles.subtitle}>{rules.stateName} · {rules.benefitName}</Text>
             </View>
             <View style={styles.initialsCircle}>
@@ -70,9 +79,9 @@ export default function RoadmapScreen() {
                     : SAGE_DARK,
                 },
               ]}>
-                {nextUpcoming?.status === 'overdue' ? 'Action overdue'
-                  : nextUpcoming?.status === 'urgent' ? 'Action needed soon'
-                  : "You're on track"}
+                {nextUpcoming?.status === 'overdue' ? t.actionOverdue
+                  : nextUpcoming?.status === 'urgent' ? t.actionNeededSoon
+                  : t.onTrack}
               </Text>
               <Text style={[
                 styles.bannerSub,
@@ -83,8 +92,13 @@ export default function RoadmapScreen() {
                 },
               ]}>
                 {nextUpcoming
-                  ? `${nextUpcoming.title}. ${daysLabel(nextUpcoming.daysUntil, nextUpcoming.date)}`
-                  : 'No deadlines coming up'}
+                  ? [
+                      `${nextUpcoming.title}. ${daysLabel(nextUpcoming.daysUntil, nextUpcoming.date, lang)}`,
+                      eligibilityEstimate && (nextUpcoming.status === 'overdue' || nextUpcoming.status === 'urgent')
+                        ? `${formatAtRisk(eligibilityEstimate.benefitRange)} ${t.atRisk}`
+                        : null,
+                    ].filter(Boolean).join(' · ')
+                  : t.noDeadlinesComingUp}
               </Text>
             </View>
           </View>
@@ -97,6 +111,9 @@ export default function RoadmapScreen() {
               key={deadline.id}
               deadline={deadline}
               isLast={index === deadlines.length - 1}
+              eligibilityEstimate={eligibilityEstimate ?? null}
+              t={t}
+              lang={lang}
             />
           ))}
         </View>
@@ -107,7 +124,19 @@ export default function RoadmapScreen() {
   );
 }
 
-function RoadmapStep({ deadline, isLast }: { deadline: Deadline; isLast: boolean }) {
+function RoadmapStep({
+  deadline,
+  isLast,
+  eligibilityEstimate,
+  t,
+  lang,
+}: {
+  deadline: Deadline;
+  isLast: boolean;
+  eligibilityEstimate: EligibilityEstimate | null;
+  t: Strings;
+  lang: import('../../types').Lang;
+}) {
   const isDone = deadline.status === 'done';
   const isUrgent = deadline.status === 'urgent';
   const isOverdue = deadline.status === 'overdue';
@@ -127,11 +156,11 @@ function RoadmapStep({ deadline, isLast }: { deadline: Deadline; isLast: boolean
     const checkedDocs = deadline.documents.filter((d) => gathered[d]);
     const uncheckedDocs = deadline.documents.filter((d) => !gathered[d]);
     const lines = [
-      `Provision: ${deadline.title}`,
-      `Due: ${formatDeadlineDate(deadline.date)}`,
+      t.shareListTitle(deadline.title),
+      t.shareListDue(formatDeadlineDate(deadline.date)),
       '',
-      ...(checkedDocs.length > 0 ? ['✓ Ready:', ...checkedDocs.map((d) => `  • ${d}`), ''] : []),
-      ...(uncheckedDocs.length > 0 ? ['Still needed:', ...uncheckedDocs.map((d) => `  • ${d}`)] : []),
+      ...(checkedDocs.length > 0 ? [t.shareListReady, ...checkedDocs.map((d) => `  • ${d}`), ''] : []),
+      ...(uncheckedDocs.length > 0 ? [t.shareListStillNeeded, ...uncheckedDocs.map((d) => `  • ${d}`)] : []),
     ];
     await Share.share({ message: lines.join('\n') });
   };
@@ -165,26 +194,35 @@ function RoadmapStep({ deadline, isLast }: { deadline: Deadline; isLast: boolean
           <Text style={[styles.cardTitle, isDone && styles.cardTitleDone]}>{deadline.title}</Text>
           {isOverdue && (
             <View style={styles.overduePill}>
-              <Text style={styles.overdueText}>Overdue</Text>
+              <Text style={styles.overdueText}>{t.overdue}</Text>
             </View>
           )}
           {isUrgent && (
             <View style={styles.urgentPill}>
-              <Text style={styles.urgentText}>Soon</Text>
+              <Text style={styles.urgentText}>{t.soon}</Text>
             </View>
           )}
         </View>
 
         <Text style={[styles.cardDate, isUrgent && styles.cardDateUrgent, isOverdue && styles.cardDateOverdue]}>
-          {formatDeadlineDate(deadline.date)} · {daysLabel(deadline.daysUntil, deadline.date)}
+          {formatDeadlineDate(deadline.date)} · {daysLabel(deadline.daysUntil, deadline.date, lang)}
         </Text>
+
+        {eligibilityEstimate && (isOverdue || isUrgent) && (
+          <View style={styles.atRiskRow}>
+            <Text style={[styles.atRiskAmount, isOverdue && styles.atRiskAmountOverdue]}>
+              {formatAtRisk(eligibilityEstimate.benefitRange)} {t.atRisk}
+            </Text>
+            <Text style={styles.atRiskHedge}>{t.estimateCaseworkerConfirms}</Text>
+          </View>
+        )}
 
         {totalDocs > 0 && (
           <View style={styles.docsSection}>
             <View style={styles.docsLabelRow}>
-              <Text style={styles.docsLabel}>DOCUMENTS NEEDED</Text>
+              <Text style={styles.docsLabel}>{t.documentsNeeded}</Text>
               <Text style={styles.docsProgress}>
-                {readyCount} of {totalDocs} ready
+                {t.ofReady(readyCount, totalDocs)}
               </Text>
             </View>
 
@@ -220,7 +258,7 @@ function RoadmapStep({ deadline, isLast }: { deadline: Deadline; isLast: boolean
             {totalDocs > 0 && (
               <TouchableOpacity onPress={handleShare} style={styles.shareRow} activeOpacity={0.7}>
                 <Ionicons name="share-outline" size={14} color={TEXT_MUTED} />
-                <Text style={styles.shareText}>Share list</Text>
+                <Text style={styles.shareText}>{t.shareList}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -413,6 +451,27 @@ const styles = StyleSheet.create({
   },
   cardDateOverdue: {
     color: CLAY,
+  },
+  atRiskRow: {
+    marginTop: SM,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SM,
+    flexWrap: 'wrap',
+  },
+  atRiskAmount: {
+    fontFamily: FONT_FAMILY,
+    fontSize: BODY_SM,
+    fontWeight: MEDIUM as '500',
+    color: AMBER_MID,
+  },
+  atRiskAmountOverdue: {
+    color: CLAY,
+  },
+  atRiskHedge: {
+    fontFamily: FONT_FAMILY,
+    fontSize: LABEL_SM,
+    color: TEXT_MUTED,
   },
   docsSection: {
     marginTop: MD,

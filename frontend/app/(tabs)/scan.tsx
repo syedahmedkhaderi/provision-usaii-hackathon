@@ -18,6 +18,7 @@ import {
   MD, LG, SECTION, SM, CARD_PADDING,
 } from '../../constants/spacing';
 import { useUser } from '../../context/UserContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { AccentCard } from '../../components/ui/AccentCard';
 import { ContactBlock } from '../../components/ui/ContactBlock';
 import { SectionLabel } from '../../components/ui/SectionLabel';
@@ -46,6 +47,7 @@ const LOADING_MESSAGES = [
 
 export default function ScanScreen() {
   const { profile } = useUser();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const [stage, setStage] = useState<Stage>('idle');
   const [result, setResult] = useState<ScanResult | null>(null);
@@ -105,8 +107,8 @@ export default function ScanScreen() {
     <View style={{ flex: 1, backgroundColor: WHITE }}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + LG }]}>
-        <Text style={styles.title}>Scan a notice</Text>
-        <Text style={styles.subtitle}>Photograph a letter. We'll explain it.</Text>
+        <Text style={styles.title}>{t.scanTitle}</Text>
+        <Text style={styles.subtitle}>{t.scanSubtitle}</Text>
       </View>
 
       <ScrollView
@@ -165,7 +167,7 @@ export default function ScanScreen() {
               <View style={styles.degradationBanner}>
                 <Ionicons name="information-circle-outline" size={14} color={NEAR_BLACK} />
                 <Text style={styles.degradationText}>
-                  AI explanation briefly unavailable. Showing rule-based answer.
+                  {t.aiUnavailable}
                 </Text>
               </View>
             )}

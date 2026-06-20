@@ -2,7 +2,7 @@
 // Rule computations — deterministic, no AI.
 // Spec Part 5.2
 
-import { UserProfile, Deadline, RiskProfile, RiskLevel } from '../types';
+import { UserProfile, Deadline, RiskProfile, RiskLevel, Lang } from '../types';
 import { SNAP_RULES } from '../constants/snapRules';
 
 const MS_PER_DAY = 86400000;
@@ -101,19 +101,23 @@ export function computeRiskScore(
   return { level, score: Math.min(score, 100), reasons };
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 export function formatDeadlineDate(isoDate: string): string {
   const d = new Date(isoDate + 'T00:00:00');
-  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  return `${MONTHS_EN[d.getMonth()]} ${d.getDate()}`;
 }
 
-export function daysLabel(daysUntil: number, isoDate?: string): string {
-  if (daysUntil === 0) return 'Due today';
-  if (daysUntil > 0) return `${daysUntil} days left`;
+export function daysLabel(daysUntil: number, isoDate?: string, lang: Lang = 'en'): string {
+  if (daysUntil === 0) return lang === 'es' ? 'Vence hoy' : 'Due today';
+  if (daysUntil > 0) return lang === 'es' ? `${daysUntil} días restantes` : `${daysUntil} days left`;
   if (isoDate) {
     const d = new Date(isoDate + 'T00:00:00');
-    return `Overdue since ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    const months = lang === 'es' ? MONTHS_ES : MONTHS_EN;
+    return lang === 'es'
+      ? `Vencido desde ${months[d.getMonth()]} ${d.getFullYear()}`
+      : `Overdue since ${months[d.getMonth()]} ${d.getFullYear()}`;
   }
-  return 'Overdue';
+  return lang === 'es' ? 'Vencido' : 'Overdue';
 }

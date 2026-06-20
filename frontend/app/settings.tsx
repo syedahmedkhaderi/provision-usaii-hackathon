@@ -18,6 +18,7 @@ import {
   RADIUS_LG, PAGE_HORIZONTAL, SM, MD, LG, SECTION, CARD_PADDING,
 } from '../constants/spacing';
 import { useUser } from '../context/UserContext';
+import { useLanguage } from '../context/LanguageContext';
 import { State, ReportingType } from '../types';
 import { SNAP_RULES } from '../constants/snapRules';
 
@@ -29,6 +30,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile, updateProfile, clearProfile } = useUser();
+  const { lang, setLang, t } = useLanguage();
 
   const [state, setState] = useState<State>(profile?.state ?? 'CA');
   const [householdSize, setHouseholdSize] = useState(profile?.householdSize ?? 1);
@@ -207,12 +209,39 @@ export default function SettingsScreen() {
         </View>
 
         {/* ── PREFERENCES ────────────────────────── */}
-        <Text style={styles.sectionLabel}>PREFERENCES</Text>
+        <Text style={styles.sectionLabel}>{t.preferences}</Text>
         <View style={styles.card}>
+          {/* Language toggle */}
+          <View style={[styles.toggleRow, styles.radioRowBorder]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>{t.languageLabel}</Text>
+            </View>
+            <View style={styles.langToggle}>
+              <TouchableOpacity
+                onPress={() => setLang('en')}
+                style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.langBtnText, lang === 'en' && styles.langBtnTextActive]}>
+                  {t.languageEn}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setLang('es')}
+                style={[styles.langBtn, lang === 'es' && styles.langBtnActive]}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.langBtnText, lang === 'es' && styles.langBtnTextActive]}>
+                  {t.languageEs}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          {/* Deadline reminders */}
           <View style={styles.toggleRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Deadline reminders</Text>
-              <Text style={styles.rowSub}>30, 14, 7, and 2 days before each deadline</Text>
+              <Text style={styles.rowLabel}>{t.deadlineReminders}</Text>
+              <Text style={styles.rowSub}>{t.deadlineRemindersSub}</Text>
             </View>
             <Switch
               value={notifications}
@@ -455,6 +484,33 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: SAGE,
+  },
+
+  // Language toggle
+  langToggle: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  langBtn: {
+    paddingHorizontal: MD,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: BORDER,
+    backgroundColor: WHITE,
+  },
+  langBtnActive: {
+    backgroundColor: SAGE,
+    borderColor: SAGE,
+  },
+  langBtnText: {
+    fontFamily: FONT_FAMILY,
+    fontSize: BODY_SM,
+    fontWeight: MEDIUM as '500',
+    color: TEXT_MUTED,
+  },
+  langBtnTextActive: {
+    color: WHITE,
   },
 
   // Notifications toggle
