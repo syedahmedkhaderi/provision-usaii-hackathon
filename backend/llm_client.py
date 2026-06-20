@@ -148,12 +148,27 @@ def _rotate_call(payload: dict, model: str = GEMINI_MODEL) -> dict:
     if not GEMINI_API_KEYS:
         raise RuntimeError("No Gemini API keys configured — set GEMINI_API_KEYS in .env")
 
+    # If we're in a backoff window, try the fallback model directly
+    # by temporarily clearing the backoff for this attempt
     if time.time() < _gemini_disabled_until:
-        remaining = int(_gemini_disabled_until - time.time())
-        raise RuntimeError(
-            f"Gemini temporarily disabled (all keys quota-exceeded). "
-            f"Retry in {remaining}s."
-        )
+        if model != "gemini-3.1-flash-lite":
+            saved = _gemini_disabled_until
+            _gemini_disabled_until = 0
+            try:
+                return _rotate_call(payload, model="gemini-3.1-flash-lite")
+            except RuntimeError:
+                _gemini_disabled_until = saved
+                remaining = int(saved - time.time())
+                raise RuntimeError(
+                    f"Gemini temporarily disabled (all keys quota-exceeded). "
+                    f"Retry in {remaining}s."
+                )
+        else:
+            remaining = int(_gemini_disabled_until - time.time())
+            raise RuntimeError(
+                f"Gemini temporarily disabled (all keys quota-exceeded). "
+                f"Retry in {remaining}s."
+            )
 
     last_error: str = "unknown"
     for key in GEMINI_API_KEYS:
