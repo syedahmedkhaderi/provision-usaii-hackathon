@@ -216,9 +216,25 @@ class TestRecoveryPlan:
         result = re.recovery_plan("TX", "missed_recert")
         assert len(result["steps"]) >= 3
 
-    def test_first_step_mentions_caseworker(self):
+    def test_first_step_mentions_action(self):
         result = re.recovery_plan("CA", "missed_sar7")
-        assert "caseworker" in result["steps"][0]["detail"].lower()
+        # First step should mention submitting form or calling caseworker
+        first_detail = result["steps"][0]["detail"].lower()
+        assert "caseworker" in first_detail or "submit" in first_detail or "form" in first_detail
+
+    def test_ca_hearing_office_correct(self):
+        result = re.recovery_plan("CA", "closure_notice")
+        assert "County Hearing Office" in result["letter_template"]
+
+    def test_tx_hearing_office_correct(self):
+        result = re.recovery_plan("TX", "closure_notice")
+        assert "HHSC" in result["letter_template"]
+
+    def test_missed_form_has_different_first_step(self):
+        """Missed form situations should prioritize submitting the form."""
+        result_missed = re.recovery_plan("CA", "missed_sar7")
+        result_closure = re.recovery_plan("CA", "closure_notice")
+        assert result_missed["steps"][0]["title"] != result_closure["steps"][0]["title"]
 
 
 # ── _add_months ───────────────────────────────────────────────────────────────
