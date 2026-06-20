@@ -235,6 +235,10 @@ export default function ReportScreen() {
                       style={styles.citationToggle}
                       onPress={() => setShowCitations((v) => !v)}
                       activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel="How we got this answer"
+                      accessibilityHint="Show the policy sources used for this result"
+                      accessibilityState={{ expanded: showCitations }}
                     >
                       <Text style={styles.citationToggleText}>How we got this answer</Text>
                       <Ionicons
@@ -266,6 +270,9 @@ export default function ReportScreen() {
                     style={styles.callScriptLink}
                     onPress={() => setShowCallScript(true)}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel="Prepare for my call"
+                    accessibilityHint="See a script with what to say when calling your caseworker"
                   >
                     <Ionicons name="call-outline" size={15} color={SAGE} />
                     <Text style={styles.callScriptLinkText}>Prepare for my call →</Text>

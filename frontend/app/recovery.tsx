@@ -110,6 +110,9 @@ export default function RecoveryScreen() {
                 onPress={handleCopy}
                 style={[styles.copyBtn, { backgroundColor: copied ? TEXT_SECONDARY : CLAY }]}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={copied ? "Copied to clipboard" : "Copy hearing request letter"}
+                accessibilityHint="Copy the fair hearing request letter so you can paste it and send it"
               >
                 <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={WHITE} />
                 <Text style={styles.copyBtnText}>

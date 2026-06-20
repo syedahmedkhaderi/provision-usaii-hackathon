@@ -125,7 +125,14 @@ export default function ScanScreen() {
         {/* IDLE */}
         {stage === 'idle' && (
           <>
-            <TouchableOpacity onPress={showActionSheet} activeOpacity={0.75} style={styles.captureArea}>
+            <TouchableOpacity
+              onPress={showActionSheet}
+              activeOpacity={0.75}
+              style={styles.captureArea}
+              accessibilityRole="button"
+              accessibilityLabel="Capture or upload a notice"
+              accessibilityHint="Take a photo or choose an image of your SNAP letter"
+            >
               <View style={styles.cameraIconCircle}>
                 <Ionicons name="camera-outline" size={30} color={SAGE} />
               </View>
