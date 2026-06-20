@@ -123,7 +123,31 @@ Press `q` or Ctrl+C to stop both.
 ```bash
 curl http://localhost:8000/health
 # {"status":"ok","gemini_available":true}
+
+# Get demo personas for testing
+curl http://localhost:8000/demo/scenarios
 ```
+
+---
+
+## Testing
+
+The backend has **127 automated tests** covering rules engine, API contracts, domain accuracy, and security:
+
+```bash
+cd backend
+source .venv/bin/activate   # or .venv\Scripts\activate on Windows
+python -m pytest tests/ -v
+```
+
+Test layers:
+- **test_rules_engine.py** (44 tests) — eligibility, classification, roadmap, recovery, date math
+- **test_api.py** (37 tests) — all routes with valid/invalid/hostile payloads, Gemini mocked
+- **test_domain_accuracy.py** (26 tests) — SNAP thresholds verified against USDA FY2026 source-of-truth
+- **test_security.py** (12 tests) — CORS, secret leakage, prompt injection, oversized payloads
+- **test_rules_engine.py** (8 tests) — household size boundaries, date clamping, recovery state branching
+
+Every SNAP income threshold, benefit amount, and deadline is verified against USDA FNS FY2026 published values.
 
 ---
 
