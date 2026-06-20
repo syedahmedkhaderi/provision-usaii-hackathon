@@ -193,24 +193,50 @@ def build_roadmap(state: str, enrollment_date: str, household_size: int) -> List
 
 def recovery_plan(state: str, situation: str) -> dict:
     fair_hearing_days = 90
-    steps = [
-        {
+
+    # State-specific hearing office and process
+    if state == "CA":
+        hearing_office = "County Hearing Office"
+        hearing_method = "Call 1-800-952-5253 or submit your request in writing to your county welfare department."
+        reapply_info = "You can reapply at any time at your local county social services office or through BenefitsCal.com."
+    else:  # TX
+        hearing_office = "Texas Health and Human Services Commission (HHSC)"
+        hearing_method = "Call 2-1-1, visit YourTexasBenefits.com, or mail your request to the address on your notice."
+        reapply_info = "You can reapply online at YourTexasBenefits.com or at any local HHSC office."
+
+    # Situation-specific first step
+    situation_lower = (situation or "").lower()
+    if "missed" in situation_lower:
+        first_step = {
+            "title": "Submit the missed form immediately",
+            "detail": "Your benefits may have stopped because a required form wasn't submitted. Submit it right away — many counties can restore benefits if the form is received within 30 days.",
+        }
+    elif "closure" in situation_lower or "termination" in situation_lower:
+        first_step = {
+            "title": "Call your caseworker immediately",
+            "detail": "Contact your caseworker to understand why benefits were stopped and what evidence or forms are needed to restore them.",
+        }
+    else:
+        first_step = {
             "title": "Call your caseworker immediately",
             "detail": "Contact your caseworker to understand what happened and what is needed to restore your benefits.",
-        },
+        }
+
+    steps = [
+        first_step,
         {"title": "Gather your documents", "detail": "Collect ID, proof of income, and any notices you have received."},
         {
             "title": "Request a fair hearing if you disagree",
             "detail": (
-                "You have 90 days from the notice date to appeal. Requesting within 10 days "
-                "may allow benefits to continue during the appeal."
+                f"You have {fair_hearing_days} days from the notice date to appeal. {hearing_method} "
+                "Requesting within 10 days may allow benefits to continue during the appeal."
             ),
         },
-        {"title": "Reapply if needed", "detail": "If too much time has passed, you may need to reapply."},
+        {"title": "Reapply if needed", "detail": f"If too much time has passed, you may need to reapply. {reapply_info}"},
     ]
 
     letter_template = (
-        "Dear County Hearing Office,\n\n"
+        f"Dear {hearing_office},\n\n"
         "I, [YOUR FULL NAME], am requesting a fair hearing regarding [DESCRIBE ISSUE] "
         "dated [NOTICE DATE]. My case number is [CASE NUMBER].\n\n"
         "I believe this decision is incorrect because [YOUR REASON].\n\n"
@@ -222,8 +248,5 @@ def recovery_plan(state: str, situation: str) -> dict:
         "steps": steps,
         "fair_hearing_deadline_days": fair_hearing_days,
         "letter_template": letter_template,
-        "reapply_note": (
-            "If too much time has passed since your termination, you may need to reapply. "
-            "Gather your ID, proof of income, and proof of residence to speed up the process."
-        ),
+        "reapply_note": reapply_info,
     }
