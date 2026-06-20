@@ -7,20 +7,26 @@ from typing import Optional, Dict, List
 # Federal poverty level (monthly) — FY2026 48-state values
 # Source: USDA FNS SNAP Income and Resource Standards, effective Oct 1 2025
 # https://www.fns.usda.gov/snap/charts
-FPL_MONTHLY = {1: 1255, 2: 1704, 3: 2152, 4: 2601, 5: 3049, 6: 3498, 7: 3946, 8: 4395}
-GROSS_LIMIT_130 = {k: int(v * 1.30) for k, v in FPL_MONTHLY.items()}
+# These are the NET monthly income limits (100% FPL)
+FPL_MONTHLY = {1: 1305, 2: 1763, 3: 2221, 4: 2680, 5: 3138, 6: 3596, 7: 4054, 8: 4512}
+
+# GROSS monthly income limits (130% FPL) — published directly by USDA, not derived
+# Source: same USDA FNS page
+GROSS_LIMIT_130 = {
+    1: 1696, 2: 2291, 3: 2887, 4: 3483, 5: 4079, 6: 4675, 7: 5270, 8: 5866,
+}
 
 # Maximum monthly allotment by household size — FY2026
-# Source: USDA FNS SNAP Cost of Living Adjustments, effective Oct 1 2025
+# Source: USDA FNS Cost of Living Adjustments, effective Oct 1 2025
 MAX_ALLOTMENT = {
-    1: 281,
-    2: 516,
-    3: 740,
-    4: 939,
-    5: 1114,
-    6: 1260,
-    7: 1412,
-    8: 1566,
+    1: 292,
+    2: 536,
+    3: 768,
+    4: 975,
+    5: 1158,
+    6: 1390,
+    7: 1536,
+    8: 1756,
 }
 
 
@@ -91,12 +97,13 @@ def classify_change(state: str, change_text: str) -> Optional[dict]:
     t = (change_text or "").lower()
 
     mappings = [
-        ("income_increase", ["increase", "raise", "more hours", "overtime", "got a job", "new job"]),
-        ("income_decrease", ["lost job", "reduced hours", "less hours", "pay cut", "furlough"]),
-        ("household_change", ["moved in", "moved out", "married", "divorce", "new baby", "birth"]),
-        ("address_change", ["moved", "change address", "new address", "moved to"]),
-        ("work_hours_change", ["hours", "work less", "work more", "schedule change"]),
-        ("asset_change", ["lottery", "inherit", "asset", "savings increased"]),
+        # Order matters: check more specific categories first
+        ("asset_change", ["lottery", "inherit", "asset", "savings increased", "gambling"]),
+        ("household_change", ["moved in", "moved out", "married", "divorce", "new baby", "birth", "roommate"]),
+        ("address_change", ["new address", "change address", "moved to"]),
+        ("income_decrease", ["lost my job", "lost job", "reduced hours", "less hours", "pay cut", "furlough", "hours were reduced", "laid off", "fired"]),
+        ("income_increase", ["got a job", "new job", "raise", "more hours", "overtime", "income increased", "pay raise"]),
+        ("work_hours_change", ["hours", "work less", "work more", "schedule change", "hours changed"]),
     ]
 
     for cat, kws in mappings:
