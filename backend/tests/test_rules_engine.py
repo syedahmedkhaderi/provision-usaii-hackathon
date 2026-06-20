@@ -35,10 +35,15 @@ class TestEstimateEligibility:
         result = re.estimate_eligibility("CA", 1, limit + 1, False, 0, 0)
         assert result["likely_eligible"] is False
 
-    def test_elderly_disabled_always_eligible_currently(self):
-        """BUG H3: Currently passes regardless of income. This test documents the issue."""
+    def test_elderly_disabled_high_income_ineligible(self):
+        """Elderly/disabled are exempt from gross test but must still pass net income test."""
         result = re.estimate_eligibility("CA", 1, 100000, True, 0, 0)
-        assert result["likely_eligible"] is True  # This is a KNOWN BUG
+        assert result["likely_eligible"] is False  # fails net test
+
+    def test_elderly_disabled_under_net_eligible(self):
+        """Elderly/disabled under net limit should be eligible."""
+        result = re.estimate_eligibility("CA", 1, 1000, True, 0, 0)
+        assert result["likely_eligible"] is True  # passes net test
 
     def test_household_size_clamped_to_8(self):
         result = re.estimate_eligibility("CA", 99, 0, False, 0, 0)
