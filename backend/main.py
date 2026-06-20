@@ -204,6 +204,93 @@ def demo_scenarios():
     }
 
 
+def _classify_notice_fallback(state: str, notice_text: str, caseworker: str) -> dict:
+    """Deterministic keyword-based notice classification when Gemini is unavailable."""
+    t = (notice_text or "").lower()
+
+    if any(kw in t for kw in ["terminat", "discontinu", "end", "stop", "denied", "denial"]):
+        return {
+            "notice_type": "termination",
+            "what_it_means": "This notice says your benefits are ending or being stopped. You have the right to appeal this decision by requesting a fair hearing within 90 days. If you request a hearing within 10 days, your benefits may continue during the appeal.",
+            "urgency": "urgent",
+            "deadline_days": 90,
+            "confidence": "medium",
+            "key_facts": ["Benefits are ending", "90-day appeal window", "Request hearing within 10 days to continue benefits"],
+            "options": [
+                {"label": "Call your caseworker", "detail": f"Call {caseworker} immediately to understand why and what you can do."},
+                {"label": "Request a fair hearing", "detail": "You have 90 days to appeal. Requesting within 10 days may keep benefits active during the appeal."},
+            ],
+        }
+
+    if any(kw in t for kw in ["reduc", "decreas", "lower", "cut"]):
+        return {
+            "notice_type": "reduction",
+            "what_it_means": "This notice says your benefit amount is being reduced. You can appeal this decision within 90 days by requesting a fair hearing.",
+            "urgency": "moderate",
+            "deadline_days": 90,
+            "confidence": "medium",
+            "key_facts": ["Benefit amount is decreasing", "90-day appeal window"],
+            "options": [
+                {"label": "Call your caseworker", "detail": f"Call {caseworker} to understand the reason for the reduction."},
+                {"label": "Request a fair hearing", "detail": "You have 90 days to appeal if you disagree with the reduction."},
+            ],
+        }
+
+    if any(kw in t for kw in ["interview", "appointment", "meeting", "phone call"]):
+        return {
+            "notice_type": "interview_request",
+            "what_it_means": "This notice is asking you to complete an interview or appointment. Missing it could affect your benefits.",
+            "urgency": "urgent",
+            "deadline_days": 10,
+            "confidence": "medium",
+            "key_facts": ["An interview or appointment is required", "Missing it may stop benefits"],
+            "options": [
+                {"label": "Call your caseworker", "detail": f"Call {caseworker} to schedule or confirm your interview."},
+            ],
+        }
+
+    if any(kw in t for kw in ["recertif", "renew", "reapply", "qr-7", "sar-7", "sar7"]):
+        return {
+            "notice_type": "renewal_reminder",
+            "what_it_means": "This is a reminder that you need to complete a recertification or submit a periodic report. If you don't submit it on time, your benefits may stop.",
+            "urgency": "moderate",
+            "deadline_days": None,
+            "confidence": "medium",
+            "key_facts": ["A form or recertification is due", "Missing the deadline may stop benefits"],
+            "options": [
+                {"label": "Submit the form", "detail": "Submit the requested form as soon as possible to avoid benefit disruption."},
+                {"label": "Call your caseworker", "detail": f"Call {caseworker} if you need help or have questions about the form."},
+            ],
+        }
+
+    if any(kw in t for kw in ["overpay", "owe", "debt", "collect"]):
+        return {
+            "notice_type": "overpayment",
+            "what_it_means": "This notice says you may have been overpaid benefits and the agency wants to recover the money. You have the right to appeal.",
+            "urgency": "moderate",
+            "deadline_days": 90,
+            "confidence": "medium",
+            "key_facts": ["Potential overpayment identified", "You can appeal", "Recovery may reduce future benefits"],
+            "options": [
+                {"label": "Call your caseworker", "detail": f"Call {caseworker} to understand the overpayment amount and options."},
+                {"label": "Request a fair hearing", "detail": "You have 90 days to appeal if you disagree with the overpayment."},
+            ],
+        }
+
+    # Generic fallback
+    return {
+        "notice_type": "other",
+        "what_it_means": f"We need more information to interpret this notice. Please call your caseworker at {caseworker} who can explain it and tell you what action is required.",
+        "urgency": "urgent",
+        "deadline_days": None,
+        "confidence": "low",
+        "key_facts": [],
+        "options": [
+            {"label": "Call your caseworker", "detail": f"Call {caseworker} to get an explanation as soon as possible."},
+            {"label": "Request a fair hearing", "detail": "You have 90 days from the notice date to appeal any decision you disagree with."},
+        ],
+    }
+
 
 @app.post("/eligibility/check")
 def check_eligibility(req: EligibilityRequest):
@@ -349,25 +436,8 @@ def interpret_notice(req: NoticeRequest):
             ai_unavailable = True
 
     if ai_unavailable or not result:
-        result = {
-            "notice_type": "other",
-            "what_it_means": (
-                "We could not interpret the notice right now. Please call your caseworker "
-                "who can explain it and tell you what action is required."
-            ),
-            "urgency": "urgent",
-            "deadline_days": None,
-            "options": [
-                {
-                    "label": "Call your caseworker",
-                    "detail": f"Call {caseworker} to get an explanation as soon as possible.",
-                },
-                {
-                    "label": "Request a fair hearing",
-                    "detail": "You have 90 days from the notice date to appeal any decision you disagree with.",
-                },
-            ],
-        }
+        # Deterministic fallback: keyword-based notice classification
+        result = _classify_notice_fallback(req.state, req.notice_text or "", caseworker)
 
     # Normalise option keys (Gemini may use label/detail or action/detail)
     options = [
