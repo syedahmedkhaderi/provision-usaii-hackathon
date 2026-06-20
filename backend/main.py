@@ -50,6 +50,75 @@ def health():
     return {"status": "ok", "gemini_available": llm_client.is_gemini_available()}
 
 
+# ── Demo scenarios for judges ─────────────────────────────────────────────────
+
+@app.get("/demo/scenarios")
+def demo_scenarios():
+    """Returns pre-built demo personas for judges to test the app quickly."""
+    return {
+        "scenarios": [
+            {
+                "id": "maria_ca",
+                "name": "Maria — California",
+                "description": "Single parent, LA, part-time worker, got a raise",
+                "profile": {
+                    "state": "CA",
+                    "household_size": 3,
+                    "monthly_income": 1800,
+                    "enrollment_date": "2026-01-15",
+                    "reporting_type": "SAR",
+                    "issue_type": "none",
+                    "notifications_enabled": True,
+                    "onboarding_complete": True,
+                },
+                "demo_inputs": {
+                    "report_text": "I got a raise at work, making $600 more per month",
+                    "notice_text": "Your CalFresh benefits will be discontinued for failure to submit your SAR-7.",
+                },
+            },
+            {
+                "id": "james_tx",
+                "name": "James — Texas",
+                "description": "Houston, missed quarterly report, benefits at risk",
+                "profile": {
+                    "state": "TX",
+                    "household_size": 2,
+                    "monthly_income": 1500,
+                    "enrollment_date": "2026-02-01",
+                    "reporting_type": "QR",
+                    "issue_type": "missed_recert",
+                    "notifications_enabled": True,
+                    "onboarding_complete": True,
+                },
+                "demo_inputs": {
+                    "report_text": "I lost my job last week",
+                    "notice_text": "Your SNAP benefits will end unless you complete recertification.",
+                },
+            },
+            {
+                "id": "dana_ca_recovery",
+                "name": "Dana — California Recovery",
+                "description": "Sacramento, benefits terminated, needs fair hearing",
+                "profile": {
+                    "state": "CA",
+                    "household_size": 1,
+                    "monthly_income": 1200,
+                    "enrollment_date": "2025-06-01",
+                    "reporting_type": "SAR",
+                    "issue_type": "closure_notice",
+                    "notifications_enabled": True,
+                    "onboarding_complete": True,
+                },
+                "demo_inputs": {
+                    "report_text": "My benefits were terminated",
+                    "notice_text": "Your CalFresh benefits have been terminated effective immediately due to failure to comply with program requirements.",
+                },
+            },
+        ]
+    }
+
+
+
 @app.post("/eligibility/check")
 def check_eligibility(req: EligibilityRequest):
     # Deterministic rules engine result

@@ -44,6 +44,27 @@ class TestHealth:
         assert res.json()["gemini_available"] is True
 
 
+class TestDemoScenarios:
+
+    def test_returns_scenarios(self):
+        res = client.get("/demo/scenarios")
+        assert res.status_code == 200
+        body = res.json()
+        assert "scenarios" in body
+        assert len(body["scenarios"]) >= 3
+
+    def test_each_scenario_has_required_fields(self):
+        res = client.get("/demo/scenarios")
+        scenarios = res.json()["scenarios"]
+        for s in scenarios:
+            assert "id" in s
+            assert "name" in s
+            assert "profile" in s
+            assert "demo_inputs" in s
+            assert s["profile"]["state"] in ("CA", "TX")
+            assert s["profile"]["onboarding_complete"] is True
+
+
 # ── /eligibility/check ────────────────────────────────────────────────────────
 
 class TestEligibility:
