@@ -11,7 +11,12 @@ export async function saveProfile(profile: UserProfile): Promise<void> {
 
 export async function loadProfile(): Promise<UserProfile | null> {
   const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  return raw ? JSON.parse(raw) : null;
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 export async function clearProfile(): Promise<void> {
