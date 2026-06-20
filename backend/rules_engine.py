@@ -58,9 +58,16 @@ def estimate_eligibility(
     size = _size_key(household_size)
 
     gross_limit = GROSS_LIMIT_130.get(size, GROSS_LIMIT_130[8])
+    net_limit = FPL_MONTHLY.get(size, FPL_MONTHLY[8])
 
-    # If household has elderly or disabled member, skip gross test (per spec)
-    passes_gross = True if has_elderly_or_disabled else (monthly_gross_income <= gross_limit)
+    # If household has elderly or disabled member, skip gross test but still
+    # apply net income test at 100% FPL (per SNAP rules)
+    if has_elderly_or_disabled:
+        passes_gross = True  # exempt from gross test
+        passes_net = monthly_gross_income <= net_limit  # must still meet net test
+    else:
+        passes_gross = monthly_gross_income <= gross_limit
+        passes_net = True  # non-elderly only need gross test at this simplification level
 
     # Simple deterministic benefit estimate using MAX_ALLOTMENT as a top end.
     # This is a placeholder range; do NOT treat as authoritative.
@@ -68,10 +75,10 @@ def estimate_eligibility(
     low = int(max(0, max_allot * 0.6))
     high = int(max_allot)
 
-    likely = passes_gross
+    likely = passes_gross and passes_net
     confidence = "medium"
     explanation = (
-        f"Using federal thresholds, the 130% FPL gross-income limit for a {household_size}-person household "
+        f"Using federal thresholds, the 130% FPL gross-income limit for a {size}-person household "
         f"is approximately ${gross_limit:,}/month. "
         f"Your reported gross income of ${int(monthly_gross_income):,} "
         f"{('falls within' if likely else 'exceeds')} that limit."
