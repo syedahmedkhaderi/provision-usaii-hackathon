@@ -74,6 +74,23 @@ def _extract_json(text: str) -> dict:
     return json.loads(text[start : end + 1])
 
 
+def _extract_text_from_response(data: dict) -> str:
+    """Return the first text part from a Gemini REST response."""
+    candidates = data.get("candidates", [])
+    if not candidates:
+        raise RuntimeError(f"No candidates returned by Gemini: {data}")
+
+    finish_reason = candidates[0].get("finishReason", "")
+    if finish_reason in ("SAFETY", "RECITATION", "BLOCKED"):
+        raise RuntimeError(f"Gemini response blocked (finishReason={finish_reason})")
+
+    parts = (candidates[0].get("content") or {}).get("parts") or []
+    if not parts or "text" not in parts[0]:
+        raise RuntimeError(f"Gemini returned no text parts: {data}")
+
+    return parts[0]["text"]
+
+
 # ── Availability check ─────────────────────────────────────────────────────────
 
 def is_gemini_available() -> bool:
@@ -102,10 +119,14 @@ def _rotate_call(payload: dict, model: str = GEMINI_MODEL) -> dict:
 
     last_error: str = "unknown"
     for key in GEMINI_API_KEYS:
-        url = f"{_BASE}/{model}:generateContent?key={key}"
+        url = f"{_BASE}/{model}:generateContent"
         try:
             with httpx.Client(timeout=30) as client:
-                resp = client.post(url, json=payload)
+                resp = client.post(
+                    url,
+                    headers={"x-goog-api-key": key},
+                    json=payload,
+                )
 
             if resp.status_code == 429:
                 last_error = f"quota exceeded on key …{key[-4:]}"
@@ -120,25 +141,13 @@ def _rotate_call(payload: dict, model: str = GEMINI_MODEL) -> dict:
 
             resp.raise_for_status()
             data = resp.json()
-            # Safety check: Gemini may block content without returning text
-            candidates = data.get("candidates", [])
-            if candidates:
-                finish_reason = candidates[0].get("finishReason", "")
-                if finish_reason in ("SAFETY", "RECITATION", "BLOCKED"):
-                    # Content was filtered — return safe fallback, don't disable
-                    return {
-                        "notice_type": "other",
-                        "what_it_means": "The AI could not safely analyze this content. Please contact your caseworker.",
-                        "urgency": "urgent",
-                        "options": [],
-                    }
-            text = candidates[0]["content"]["parts"][0]["text"]
+            text = _extract_text_from_response(data)
             return _extract_json(text)
 
         except RuntimeError:
             raise
         except Exception as exc:
-            last_error = str(exc).split("?key=")[0]  # strip API key from URL
+            last_error = str(exc)
             continue
 
     # All keys failed.
@@ -157,7 +166,7 @@ def call_gemini_json(system_prompt: str, user_prompt: str) -> dict:
     Returns a parsed dict. Raises RuntimeError if all keys fail.
     """
     payload = {
-        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
         "generationConfig": {
             "temperature": 0.2,
@@ -197,15 +206,15 @@ def call_gemini_vision_json(
         return cached
 
     payload = {
-        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [
             {
                 "role": "user",
                 "parts": [
                     {"text": text or "Analyze this image."},
                     {
-                        "inlineData": {
-                            "mimeType": mime_type,
+                        "inline_data": {
+                            "mime_type": mime_type,
                             "data": image_base64,
                         }
                     },

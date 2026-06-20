@@ -98,11 +98,11 @@ def classify_change(state: str, change_text: str) -> Optional[dict]:
 
     mappings = [
         # Order matters: check more specific categories first
-        ("asset_change", ["lottery", "inherit", "asset", "savings increased", "gambling"]),
-        ("household_change", ["moved in", "moved out", "married", "divorce", "new baby", "birth", "roommate"]),
-        ("address_change", ["new address", "change address", "moved to"]),
-        ("income_decrease", ["lost my job", "lost job", "reduced hours", "less hours", "pay cut", "furlough", "hours were reduced", "laid off", "fired"]),
-        ("income_increase", ["got a job", "new job", "raise", "more hours", "overtime", "income increased", "pay raise"]),
+        ("asset_change", ["lottery", "inherit", "inheritance", "asset", "savings increased", "gambling", "one-time payment", "lump sum"]),
+        ("household_change", ["moved in", "moved out", "married", "divorce", "new baby", "birth", "roommate", "someone left my household", "someone joined my household"]),
+        ("address_change", ["new address", "change address", "moved to", "moved apartments", "moved houses"]),
+        ("income_decrease", ["lost my job", "lost job", "reduced hours", "less hours", "pay cut", "furlough", "hours were reduced", "laid off", "fired", "income went down"]),
+        ("income_increase", ["got a job", "new job", "started a job", "started working", "part-time job", "full-time job", "raise", "more hours", "overtime", "income increased", "income went up", "pay raise"]),
         ("work_hours_change", ["hours", "work less", "work more", "schedule change", "hours changed"]),
     ]
 

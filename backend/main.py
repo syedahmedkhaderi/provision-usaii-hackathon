@@ -43,6 +43,19 @@ _DISCLAIMER = (
 )
 
 
+def _deterministic_change_reasoning(category: str, deadline_days: int | None) -> str:
+    timing = f" within {deadline_days} days" if deadline_days is not None else ""
+    reasons = {
+        "income_increase": f"A new job or higher income can affect your benefits. This usually needs to be reported{timing}.",
+        "income_decrease": f"A job loss or lower income may change your benefit amount. Report it{timing} so your caseworker can review it.",
+        "household_change": f"A change in who lives with you can affect SNAP rules and benefit levels. Report it{timing}.",
+        "address_change": f"An address change can affect your case record and sometimes your eligibility. Report it{timing}.",
+        "work_hours_change": f"A change in work hours can affect your reported income. Report it{timing}.",
+        "asset_change": f"A large one-time payment or asset change can affect your case. Report it{timing}.",
+    }
+    return reasons.get(category, "Contact your caseworker to confirm what to do.")
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -136,8 +149,9 @@ def interpret_change(req: ReportRequest):
         category = det.get("category")
         must_report = det.get("must_report")
         deadline_days = det.get("deadline_days")
-        reasoning = ai_result.get("reasoning") if ai_result.get("reasoning") else (
-            "Report this change within 10 days. Contact your caseworker for confirmation."
+        reasoning = ai_result.get("reasoning") if ai_result.get("reasoning") else _deterministic_change_reasoning(
+            category,
+            deadline_days,
         )
     else:
         # fall back to AI if available
