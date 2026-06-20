@@ -60,7 +60,11 @@ def _deterministic_change_reasoning(category: str, deadline_days: int | None) ->
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "gemini_available": llm_client.is_gemini_available()}
+    return {
+        "status": "ok",
+        "gemini_available": llm_client.probe_gemini(),
+        "gemini_configured": llm_client.is_gemini_available(),
+    }
 
 
 @app.post("/eligibility/check")

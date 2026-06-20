@@ -32,6 +32,8 @@ _BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
 _gemini_disabled_until: float = 0.0
 _BACKOFF_SECONDS: int = 600  # 10 minutes after all keys fail
+_probe_cache_until: float = 0.0
+_probe_cache_value: bool = False
 
 # ── In-memory cache ────────────────────────────────────────────────────────────
 # Keyed by SHA-256 of (model + system_prompt + user_prompt).
@@ -96,6 +98,41 @@ def _extract_text_from_response(data: dict) -> str:
 def is_gemini_available() -> bool:
     """True when keys are configured and not in the back-off window."""
     return bool(GEMINI_API_KEYS) and time.time() >= _gemini_disabled_until
+
+
+def probe_gemini() -> bool:
+    """
+    Lightweight live readiness check for health endpoints.
+    Cached briefly so repeated /health calls do not spam the API.
+    """
+    global _probe_cache_until, _probe_cache_value
+
+    now = time.time()
+    if now < _probe_cache_until:
+        return _probe_cache_value
+
+    if not is_gemini_available():
+        _probe_cache_value = False
+        _probe_cache_until = now + 30
+        return False
+
+    ready = False
+    for key in GEMINI_API_KEYS:
+        try:
+            with httpx.Client(timeout=10) as client:
+                resp = client.get(
+                    f"{_BASE}/{GEMINI_MODEL}",
+                    headers={"x-goog-api-key": key},
+                )
+            if resp.status_code == 200:
+                ready = True
+                break
+        except Exception:
+            continue
+
+    _probe_cache_value = ready
+    _probe_cache_until = now + 30
+    return ready
 
 
 # ── Core rotator ──────────────────────────────────────────────────────────────

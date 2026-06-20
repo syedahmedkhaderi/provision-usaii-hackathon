@@ -14,8 +14,9 @@ client = TestClient(app)
 
 class TestCORS:
 
-    def test_cors_origin_wildcard_present(self):
+    def test_cors_origin_wildcard_present(self, monkeypatch):
         """CORS allows all origins — documented as demo-only posture."""
+        monkeypatch.setattr(llm_client, "probe_gemini", lambda: False)
         res = client.options("/health", headers={
             "Origin": "https://evil.com",
             "Access-Control-Request-Method": "POST",
@@ -23,8 +24,9 @@ class TestCORS:
         # FastAPI CORS middleware should respond to preflight
         assert res.status_code in (200, 204)
 
-    def test_arbitrary_origin_allowed(self):
+    def test_arbitrary_origin_allowed(self, monkeypatch):
         """SECURITY RISK: Any origin can call the API."""
+        monkeypatch.setattr(llm_client, "probe_gemini", lambda: False)
         res = client.get("/health", headers={"Origin": "https://evil.com"})
         # If CORS is wildcard, the response will include the origin or *
         aco = res.headers.get("access-control-allow-origin", "")
@@ -36,6 +38,7 @@ class TestCORS:
 class TestSecretLeakage:
 
     def test_api_key_not_in_health_response(self, monkeypatch):
+        monkeypatch.setattr(llm_client, "probe_gemini", lambda: False)
         res = client.get("/health")
         body = res.text
         assert "AIzaSy" not in body, "Gemini API key found in /health response!"

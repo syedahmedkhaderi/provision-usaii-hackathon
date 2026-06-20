@@ -16,10 +16,12 @@ client = TestClient(app)
 
 def _gemini_off(monkeypatch):
     monkeypatch.setattr(llm_client, "is_gemini_available", lambda: False)
+    monkeypatch.setattr(llm_client, "probe_gemini", lambda: False)
 
 
 def _gemini_on(monkeypatch, return_value=None):
     monkeypatch.setattr(llm_client, "is_gemini_available", lambda: True)
+    monkeypatch.setattr(llm_client, "probe_gemini", lambda: True)
     if return_value:
         monkeypatch.setattr(llm_client, "call_gemini_json", lambda *_a, **_k: return_value)
         monkeypatch.setattr(llm_client, "call_gemini_vision_json", lambda *_a, **_k: return_value)
