@@ -187,7 +187,14 @@ def _rotate_call(payload: dict, model: str = GEMINI_MODEL) -> dict:
             last_error = str(exc)
             continue
 
-    # All keys failed.
+    # All keys failed on the configured model.
+    # Try fallback to gemini-3.1-flash-lite if we were using a different model
+    if model != "gemini-3.1-flash-lite":
+        try:
+            return _rotate_call(payload, model="gemini-3.1-flash-lite")
+        except RuntimeError:
+            pass  # fallback also failed, continue to backoff
+
     _gemini_disabled_until = time.time() + _BACKOFF_SECONDS
     raise RuntimeError(
         f"All Gemini keys failed ({last_error}). "

@@ -27,7 +27,8 @@
       },
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -43,8 +44,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d4ae59de-0d9f-4b65-b8bf-b085f8afab03"
+        "projectId": "2eb87fef-706e-406b-93cb-382682abe2f3"
       }
-    }
+    },
+    "owner": "rr44e3"
   }
 }
