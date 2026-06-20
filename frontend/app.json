@@ -19,6 +19,8 @@
       }
     },
     "android": {
+      "package": "com.provision.snap",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F6E56"
@@ -31,7 +33,18 @@
     "plugins": [
       "expo-router",
       "expo-notifications",
-      ["expo-camera", { "cameraPermission": "Allow Provision to scan notices" }]
-    ]
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Provision to scan notices"
+        }
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d4ae59de-0d9f-4b65-b8bf-b085f8afab03"
+      }
+    }
   }
 }

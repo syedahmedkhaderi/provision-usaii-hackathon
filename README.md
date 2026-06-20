@@ -25,7 +25,7 @@ Demo scope: **California** (CalFresh / SAR) and **Texas** (SNAP / QR).
 
 ```
 Expo / React Native (iOS + Android)
-        │  JSON over LAN HTTP
+        │  JSON over HTTPS
         ▼
 FastAPI  (backend/main.py)
   ├─ schemas.py       — Pydantic request models, state validation
@@ -90,7 +90,7 @@ provision-usaii-hackathon/
 
 - Python 3.10+
 - Node 18+
-- [Expo Go](https://expo.dev/go) installed on your phone
+- [Expo Go](https://expo.dev/go) installed on your phone for local testing
 - At least one [Google Gemini API key](https://aistudio.google.com/app/apikey) (free tier works)
 
 ### 1 — Setup (run once)
@@ -99,7 +99,7 @@ provision-usaii-hackathon/
 bash setup.sh
 ```
 
-This creates the Python venv, installs all dependencies, and writes `frontend/.env` with your machine's LAN IP so Expo Go can reach the backend.
+This creates the Python venv, installs all dependencies, and writes `frontend/.env` with your machine's LAN IP so Expo Go can reach the backend during local development.
 
 Then open `backend/.env` and paste in your Gemini key(s):
 
@@ -108,7 +108,7 @@ GEMINI_API_KEYS=your_key_here
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
-### 2 — Start
+### 2 — Start locally
 
 ```bash
 bash start.sh
@@ -117,6 +117,81 @@ bash start.sh
 Boots the backend on `:8000` and launches Expo in the same terminal. Scan the QR code with **Expo Go** — phone and laptop must be on the same Wi-Fi.
 
 Press `q` or Ctrl+C to stop both.
+
+### 3 — Smoke test the backend
+
+```bash
+curl http://localhost:8000/health
+# {"status":"ok","gemini_available":true}
+```
+
+---
+
+## Deployment
+
+The project has two separate deployment surfaces:
+
+- **Backend API**: deploy to Render with the root `Dockerfile`
+- **Frontend app**: build an Android APK with Expo EAS using `frontend/eas.json`
+
+### Backend on Render
+
+1. Push the repository to GitHub.
+2. Create a new Render **Web Service** from the repo.
+3. Use:
+   - Branch: `main`
+   - Root directory: empty
+   - Runtime: `Docker`
+4. Add environment variables from `backend/.env.example`:
+
+```env
+GEMINI_API_KEYS=your_real_key1,your_real_key2
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+5. Deploy and verify:
+
+```bash
+curl https://your-render-service.onrender.com/health
+```
+
+The deployed base URL returns `{"detail":"Not Found"}` because the API does not define `GET /`. Use `/health` and the documented POST routes instead.
+
+### Frontend config for deployed backend
+
+Point `frontend/.env` at the public backend:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=https://your-render-service.onrender.com
+```
+
+### Android APK with Expo EAS
+
+This repository already includes the Android package identifier in `frontend/app.json` and build profiles in `frontend/eas.json`.
+
+Run:
+
+```bash
+cd frontend
+npx eas-cli login
+npx eas-cli build:configure
+npx eas-cli build --platform android --profile preview
+```
+
+Notes:
+
+- `preview` builds an installable APK and gives you a shareable Expo build URL
+- that APK does **not** require `expo start --tunnel` to stay running
+- if you change frontend code later, build again with the same `preview` profile
+
+### iPhone distribution
+
+iPhone distribution is separate from Android:
+
+- ad hoc installs require a paid Apple Developer account plus registered device UDIDs
+- TestFlight/App Store distribution also requires Apple Developer setup
+
+For hackathon submission, the Android APK link is the fastest reliable path unless iPhone support is explicitly required.
 
 ---
 
@@ -140,13 +215,6 @@ Press `q` or Ctrl+C to stop both.
 | `POST` | `/report/interpret` | Classify a life change and determine reporting obligation |
 | `POST` | `/notice/interpret` | Explain a SNAP notice in plain language |
 | `POST` | `/recovery/plan` | Generate recovery steps and a fair-hearing letter |
-
-Quick smoke test after starting:
-
-```bash
-curl http://localhost:8000/health
-# {"status":"ok","gemini_available":true}
-```
 
 ---
 
