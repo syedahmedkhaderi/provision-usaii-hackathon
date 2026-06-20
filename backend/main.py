@@ -344,7 +344,8 @@ def interpret_notice(req: NoticeRequest):
                     f"Rule snippets:\n{chr(10).join([s['text'] for s in kb.retrieve(req.state, notice_text)])}"
                 )
                 result = llm_client.call_gemini_json(NOTICE_SYSTEM, user_prompt)
-        except Exception:
+        except Exception as exc:
+            print(f"[notice] Gemini failed: {str(exc)[:200]}")
             ai_unavailable = True
 
     if ai_unavailable or not result:
