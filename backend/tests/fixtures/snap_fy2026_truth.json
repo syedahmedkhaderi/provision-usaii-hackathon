@@ -1,0 +1,38 @@
+{
+  "fy2026_snap_limits": {
+    "source": "USDA FNS SNAP Income Eligibility Standards, effective Oct 1 2025 - Sep 30 2026",
+    "source_url": "https://www.fns.usda.gov/snap/eligibility/income",
+    "capture_date": "2026-06-19",
+    "gross_monthly_income_130pct_fpl": {
+      "1": 1696,
+      "2": 2291,
+      "3": 2887,
+      "4": 3483,
+      "5": 4079,
+      "6": 4675,
+      "7": 5270,
+      "8": 5866
+    },
+    "net_monthly_income_100pct_fpl": {
+      "1": 1305,
+      "2": 1763,
+      "3": 2221,
+      "4": 2680,
+      "5": 3138,
+      "6": 3596,
+      "7": 4054,
+      "8": 4512
+    },
+    "max_monthly_allotment": {
+      "1": 292,
+      "2": 536,
+      "3": 768,
+      "4": 975,
+      "5": 1158,
+      "6": 1390,
+      "7": 1536,
+      "8": 1756
+    },
+    "notes": "Each additional member: add $594 (gross), $458 (net), $220 (allotment). Values from USDA FNS COLA FY2026."
+  }
+}

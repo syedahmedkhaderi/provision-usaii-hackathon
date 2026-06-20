@@ -86,7 +86,7 @@ def check_eligibility(req: EligibilityRequest):
 
     # Use AI wording when available for explanation, but never override hard numbers
     explanation = ai_result.get("explanation") if ai_result.get("explanation") else det.get("explanation")
-    # Deterministic confidence takes priority over AI confidence
+    # Deterministic confidence takes priority over AI confidence.
     confidence = det.get("confidence", ai_result.get("confidence", "medium"))
 
     return {
