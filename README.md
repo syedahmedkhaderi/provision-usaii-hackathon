@@ -6,12 +6,12 @@ Provision helps SNAP recipients move from confusion to action. It turns reportin
 
 ## Live Access
 
-- Android app: [Install Provision APK](https://expo.dev/accounts/syedahmedkhaderi/projects/provision/builds/766bc1d4-7cc8-4666-8080-54910f524538)
+- Android app: [Install Provision APK](https://expo.dev/artifacts/eas/ioPvJR8MZDHTD4CA85ZoBSHwoertGMLNFxFtP6BUsio.apk)
 - Backend API: [Render deployment](https://provision-usaii-hackathon-fdys.onrender.com/health)
 - iPhone note: iOS is not distributed yet. Use the screenshot walkthrough below unless TestFlight is added later.
 
 <p align="center">
-  <a href="https://expo.dev/accounts/syedahmedkhaderi/projects/provision/builds/766bc1d4-7cc8-4666-8080-54910f524538">
+  <a href="https://expo.dev/accounts/rr44e3/projects/provision/builds/ffd4e5fd-7c7a-4287-a1ee-cc70554def27">
     <img src="docs/assets/android-build-qr.png" alt="Provision Android install QR" width="180" />
   </a>
 </p>
