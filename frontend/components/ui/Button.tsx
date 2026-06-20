@@ -28,16 +28,19 @@ export function Button({
   const borderColor = disabled ? BORDER : isPrimary ? SAGE : BORDER;
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.75}
-      style={[
-        styles.base,
-        { backgroundColor: bgColor, borderColor, borderWidth: 1 },
-        style,
-      ]}
-    >
+  <TouchableOpacity
+    onPress={onPress}
+    disabled={disabled || loading}
+    activeOpacity={0.75}
+    accessibilityRole="button"
+    accessibilityLabel={label}
+    accessibilityState={{ disabled: disabled || loading, busy: loading }}
+    style={[
+      styles.base,
+      { backgroundColor: bgColor, borderColor, borderWidth: 1 },
+      style,
+    ]}
+  >
       {loading ? (
         <ActivityIndicator color={textColor} size="small" />
       ) : (

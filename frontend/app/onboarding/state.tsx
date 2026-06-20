@@ -47,6 +47,9 @@ export default function StateScreen() {
                 key={s.id}
                 onPress={() => setSelected(s.id)}
                 activeOpacity={0.7}
+                accessibilityRole="radio"
+                accessibilityLabel={`Select ${s.name}`}
+                accessibilityState={{ selected: isSelected }}
                 style={[
                   styles.card,
                   {
