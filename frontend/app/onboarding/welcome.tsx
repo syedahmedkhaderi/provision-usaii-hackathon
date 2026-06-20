@@ -74,7 +74,13 @@ export default function WelcomeScreen() {
 
           <Button label="Get started" onPress={() => router.push('/onboarding/state')} />
 
-          <TouchableOpacity onPress={handleDemoMode} style={styles.demoLink}>
+          <TouchableOpacity
+            onPress={handleDemoMode}
+            style={styles.demoLink}
+            accessibilityRole="button"
+            accessibilityLabel="Try with demo profile"
+            accessibilityHint="Skip onboarding and explore the app with a sample profile"
+          >
             <Ionicons name="play-circle-outline" size={14} color={TEXT_MUTED} />
             <Text style={styles.demoText}>Try with demo profile</Text>
           </TouchableOpacity>
