@@ -1,0 +1,7 @@
+services:
+  - type: docker
+    name: provision-backend
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8000
